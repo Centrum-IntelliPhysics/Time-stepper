@@ -153,7 +153,7 @@ reader = MatReader('../data/multiparameter/data_022_070_AC_chebfun_more_new_alig
 x_train = reader.read_field('Utrain_branch').T
 x_init = torch.reshape(x_train[:,0:100],(-1,100,1))
 x_parameter = torch.reshape(torch.tile(x_train[:,100::],[1,100]),(-1,100,1))
-x_train = torch.concat((x_init,x_parameter),axis=-1 )
+x_train = torch.concat((x_init,x_parameter),axis=-1)
 y_train = reader.read_field('Vtrain_out').T
 y_train = torch.reshape(y_train,(-1,100,1))
 
@@ -256,7 +256,7 @@ save_models_to = save_results_to +"model/"
 if not os.path.exists(save_models_to):
     os.makedirs(save_models_to)
     
-torch.save(model, save_models_to+'Earthquake')
+torch.save(model, save_models_to+'AC_multiparameter')
 
 ################################################################
 # testing
@@ -287,7 +287,7 @@ testing_time = t2-t1
 
 x_test = x_normalizer.decode(x_test)
 y_test = y_normalizer.decode(y_test)
-scipy.io.savemat(save_results_to+'Earthquake_responses_test.mat', 
+scipy.io.savemat(save_results_to+'AC_multiparameter_test.mat', 
                   mdict={'x_test': x_test.detach().cpu().numpy(),
                          'y_test': y_test.numpy(), 
                          'y_pred': pred.cpu().numpy(),

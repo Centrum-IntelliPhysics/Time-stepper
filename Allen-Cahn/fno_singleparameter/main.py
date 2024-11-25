@@ -256,7 +256,7 @@ save_models_to = save_results_to +"model/"
 if not os.path.exists(save_models_to):
     os.makedirs(save_models_to)
     
-torch.save(model, save_models_to+'AC_multiparameter')
+torch.save(model, save_models_to+'AC_singleparameter')
 
 ################################################################
 # testing
@@ -287,7 +287,7 @@ testing_time = t2-t1
 
 x_test = x_normalizer.decode(x_test)
 y_test = y_normalizer.decode(y_test)
-scipy.io.savemat(save_results_to+'AC_multiparameter_test.mat', 
+scipy.io.savemat(save_results_to+'AC_singleparameter_test.mat', 
                   mdict={'x_test': x_test.detach().cpu().numpy(),
                          'y_test': y_test.numpy(), 
                          'y_pred': pred.cpu().numpy(),
