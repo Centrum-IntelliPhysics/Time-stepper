@@ -23,7 +23,7 @@ def plotFitzHughNagumoSolution():
 
     # Timestepping
     dt = 1.0
-    T = 10.0
+    T = 100.0
     fig, (ax1, ax2) = plt.subplots(1, 2)
     ax1.plot(x_array, u, label='u(x, t=0.0)')
     ax2.plot(x_array, v, label='v(x, t=0.0)')

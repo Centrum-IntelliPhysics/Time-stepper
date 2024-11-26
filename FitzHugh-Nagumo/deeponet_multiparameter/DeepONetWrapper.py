@@ -15,7 +15,6 @@ class DeepONetWrapper:
         self.best_params = self.load_model_params(resultdir, filename='model_params_best.pkl')
         self.best_branch_params = self.best_params[0]
         self.best_trunk_params = self.best_params[1]
-
         self.p = 300
 
     def load_model_params(self, resultdir, filename='model_params.pkl'):
@@ -40,9 +39,6 @@ class DeepONetWrapper:
         return outputs
 
     def DeepONet(self, u, v, eps, grid):
-        # Branch_inputs and trunk_inputs are 1D arrays in my implementation. 
-        # I convert then to (1, .) and (., 1) shape here, as well as rescale
-
         branch_inputs = np.concatenate((u / 21, v / 1.e4, np.array([eps])))[np.newaxis,:]
         trunk_inputs = grid[:,np.newaxis] 
 
