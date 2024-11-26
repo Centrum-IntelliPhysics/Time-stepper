@@ -3,7 +3,6 @@ import numpy as np
 from jax import jit, vmap
 from functools import partial
 import jax.nn as jnn
-import numpy as np
 from sklearn import metrics
 
 import os
@@ -237,5 +236,8 @@ for i in range(inputs_test.shape[0]):
 
         print('#'*230)
 
+
 mse = sum(mse_list) / len(mse_list)
 print("Mean Squared Error Test :\n", mse)
+
+plt.show()
