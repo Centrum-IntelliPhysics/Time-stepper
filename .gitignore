@@ -4,3 +4,5 @@ __pycache__/
 *$py.class
 **/.DS_Store
 FitzHugh-Nagumo/data/multiparameter/data_FHN.mat
+FitzHugh-Nagumo/data/multiparameter/data_FHN_BF.mat
+FitzHugh-Nagumo/data/multiparameter/old_data/data_FHN.mat
