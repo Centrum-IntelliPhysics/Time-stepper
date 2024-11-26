@@ -7,7 +7,6 @@ import numpy as np
 from sklearn import metrics
 
 import os
-from termcolor import colored
 from scipy.io import loadmat
 import scipy.io as io
 import pickle
@@ -15,12 +14,8 @@ import pickle
 import sys
 sys.path.append("../..")
 
-import matplotlib
 import matplotlib.pyplot as plt
 plt.rcParams.update({'font.size': 9})
-import seaborn as sns
-sns.set_style("white")
-sns.set_style("ticks")
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -187,7 +182,7 @@ for i in range(inputs_test.shape[0]):
     mse_list.append(mse_i.item())
   
     if i % 500 == 0:
-        print(colored('TEST SAMPLE '+str(i+1), 'red'))
+        print('TEST SAMPLE '+str(i+1))
 
         r2score = metrics.r2_score(target1_i.flatten(), prediction1_i.flatten())
         relerror = np.linalg.norm(target1_i- prediction1_i) / np.linalg.norm(target1_i)
@@ -240,7 +235,7 @@ for i in range(inputs_test.shape[0]):
         plt.legend(['Component 1', 'Component 2'])
         plt.title('Absolute Error', fontsize=14)
 
-        print(colored('#'*230, 'green'))
+        print('#'*230)
 
 mse = sum(mse_list) / len(mse_list)
 print("Mean Squared Error Test :\n", mse)
