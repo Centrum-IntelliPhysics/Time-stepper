@@ -38,7 +38,8 @@ class DeepONetWrapper:
 
     @jit
     def DeepONet(self, params, branch_inputs, trunk_inputs):
-        # Branch_inputs and trunk_inputs are 1D arrays. I convert then to (1, .) and (., 1) shape here
+        # Branch_inputs and trunk_inputs are 1D arrays in my implementation. 
+        # I convert then to (1, .) and (., 1) shape here, as well as rescale
         branch_inputs = branch_inputs[jnp.newaxis,:]
         trunk_inputs = trunk_inputs[:,jnp.newaxis]
         branch_inputs[0, 0:200] = branch_inputs[0, 0:200] / 21 # Reschaling u(x) ?
@@ -47,9 +48,9 @@ class DeepONetWrapper:
         params_branch, params_trunk = params
         b_out = self.BranchNet(params_branch, branch_inputs)
         t_out = self.TrunkNet(params_trunk, trunk_inputs)
-        results1 = jnp.einsum('ik, lk -> il',b_out[:,0:self.p], t_out[:,0:self.p])
-        results2 = jnp.einsum('ik, lk -> il',b_out[:,self.p:2*self.p], t_out[:,self.p:2*self.p])
-        return results1, results2
+        results1 = jnp.einsum('ik, lk -> il', b_out[:,0:self.p], t_out[:,0:self.p])
+        results2 = jnp.einsum('ik, lk -> il', b_out[:,self.p:2*self.p], t_out[:,self.p:2*self.p])
+        return 21 * results1, 1.e4 * results2
     
     def __call__(self, params, branch_inputs, trunk_inputs):
         return self.DeepONet(params, branch_inputs, trunk_inputs)
