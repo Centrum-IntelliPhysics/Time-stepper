@@ -39,7 +39,7 @@ class DeepONetWrapper:
         return outputs
 
     def DeepONet(self, u, v, eps, grid):
-        branch_inputs = np.concatenate((u / 21, v / 1.e4, np.array([eps])))[np.newaxis,:]
+        branch_inputs = np.concatenate((u, v, np.array([eps])))[np.newaxis,:]
         trunk_inputs = grid[:,np.newaxis] 
 
         b_out = self.BranchNet(branch_inputs)
@@ -47,8 +47,8 @@ class DeepONetWrapper:
         u = np.einsum('ik, lk -> il', b_out[:,0:self.p], t_out[:,0:self.p])
         v = np.einsum('ik, lk -> il', b_out[:,self.p:2*self.p], t_out[:,self.p:2*self.p])
 
-        u = 21.0 * u[0,:]
-        v = 1.e4 * v[0,:]
+        u = u[0,:]
+        v = v[0,:]
         return u, v
     
     def __call__(self, branch_inputs, trunk_inputs):
