@@ -4,8 +4,6 @@ from functools import partial
 
 import jax.numpy as np
 import jax.nn as jnn
-from jax import vmap
-
 
 # The DeepONet class for the Fitzhugh-Nagumo equation represenst a map from one state (u, v, eps) to another (u, v)
 # one second later.
@@ -24,13 +22,12 @@ class DeepONetWrapper:
         return params
     
     def BranchNet(self, x):
-        def single_forward(params, x):
-            for w, b in params:
-                outputs = np.dot(x, w) + b
-                x = jnn.silu(outputs)
-            return outputs
+        for w, b in self.best_branch_params:
+            outputs = np.dot(x, w) + b
+            x = jnn.silu(outputs)
+        return outputs
 
-        return vmap(partial(single_forward, self.best_branch_params))(x)
+        #return vmap(partial(single_forward, self.best_branch_params))(x)
 
     def TrunkNet(self, x):
         for w, b in self.best_trunk_params:
