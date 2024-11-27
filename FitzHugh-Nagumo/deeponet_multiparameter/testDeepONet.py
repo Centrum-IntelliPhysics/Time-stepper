@@ -76,8 +76,8 @@ def plotFitzHughNagumoSolution():
     eps = 0.09998733340349023
     file = '/Users/hannesvdc/Research/Projects/Time-stepper/FitzHugh-Nagumo/data/multiparameter/FHN_BF_Evolution_eps=0p09998733340349023.npy'
     data = np.load(file)
-    u = data[0,0,0:200] #sigmoid(x_array, 6.0, -1, 1.0, 2.0)
-    v = data[0,0,200:] # sigmoid(x_array, 10, 0.0, 2.0, 0.1)
+    u = data[0,0,0:200]
+    v = data[0,0,200:]
 
     params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
     u0 = np.copy(u)
@@ -85,8 +85,8 @@ def plotFitzHughNagumoSolution():
     u_ss, v_ss = calculateSteadyState(u0, v0, dx, params)
     deeponet = DeepONetWrapper()
 
-    u = sigmoid(x_array, 6.0, -1, 1.0, 2.0)
-    v = sigmoid(x_array, 10, 0.0, 2.0, 0.1)
+    #u = sigmoid(x_array, 6.0, -1, 1.0, 2.0)
+    #v = sigmoid(x_array, 10, 0.0, 2.0, 0.1)
 
     # Timestepping
     dt = 1.0
