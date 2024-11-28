@@ -1,6 +1,5 @@
 import os
 import pickle
-from functools import partial
 
 import jax.numpy as np
 import jax.nn as jnn
