@@ -56,11 +56,9 @@ def plotFitzHughNagumoSolution():
     ax1.plot(x_array, u, label=r'$t=0.0$')
     ax2.plot(x_array, v, label=r'$t=0.0$')
     psi_list = [lg.norm(psi(np.concatenate((u0, v0))))]
-    cons_list = []
     for n in range(int(T / dt)):
         u_new, v_new = deeponet(u, v, eps, x_array)
         psi_list.append(lg.norm(psi(np.concatenate((u_new, v_new)))))
-        cons_list.append(lg.norm(np.concatenate((u_new - u, v_new - v))))
 
         u = np.copy(u_new)
         v = np.copy(v_new)
@@ -83,8 +81,8 @@ def plotFitzHughNagumoSolution():
     plt.figure()
     t_list = np.arange(0.0, len(psi_list))
     plt.semilogy(t_list, psi_list, label=r'$\psi(u(t), v(t)$')
-    plt.semilogy(t_list[1:], cons_list, label=r'$\sqrt{(u(t+1) - u(x))^2 + (v(t+1) - v(t))^2}$')
-    plt.xlabel(r't')
+    plt.xlabel(r'$t [s]$')
+    plt.legend()
     plt.show()
 
 if __name__ == '__main__':
