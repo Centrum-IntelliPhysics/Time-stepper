@@ -47,5 +47,5 @@ class DeepONetWrapper:
         v = v[0,:]
         return u, v
     
-    def __call__(self, branch_inputs, trunk_inputs):
-        return self.DeepONet(branch_inputs, trunk_inputs)
+    def __call__(self, u, v, eps, grid):
+        return self.DeepONet(u, v, eps, grid)

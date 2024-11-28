@@ -21,7 +21,7 @@ def findSteadyStateNewtonGMRES():
     grid = x_array / L
 
     deeponet = DeepONetWrapper()
-    flowmap = lambda x: deeponet(x[0:N], x[N:], eps, grid)
+    flowmap = lambda x: np.concatenate(deeponet(x[0:N], x[N:], eps, grid))
     psi = lambda x: x - flowmap(x)
 
     # Find a good steady - state: start from a trainig point
