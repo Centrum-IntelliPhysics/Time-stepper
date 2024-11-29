@@ -47,28 +47,42 @@ def plotFitzHughNagumoSolution():
     v0 = np.copy(v)
     u_ss, v_ss = calculateSteadyState(u0, v0, dx, params)
     deeponet = DeepONetWrapper()
-
-    #u = sigmoid(x_array, 6.0, -1, 1.0, 2.0)
-    #v = sigmoid(x_array, 10, 0.0, 2.0, 0.1)
+    psi = lambda x: x - np.concatenate(deeponet(x[0:N], x[N:], eps, x_array))
 
     # Timestepping
     dt = 1.0
-    T = 10.0
+    T = 450.0
     fig, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.plot(x_array, u, label='u(x, t=0.0)')
-    ax2.plot(x_array, v, label='v(x, t=0.0)')
+    ax1.plot(x_array, u, label=r'$t=0.0$')
+    ax2.plot(x_array, v, label=r'$t=0.0$')
+    psi_list = [lg.norm(psi(np.concatenate((u0, v0))))]
     for n in range(int(T / dt)):
-        u, v = deeponet.DeepONet(u, v, eps, x_array)
+        u_new, v_new = deeponet(u, v, eps, x_array)
+        psi_list.append(lg.norm(psi(np.concatenate((u_new, v_new)))))
 
-        ax1.plot(x_array, u, label='u(x, t='+str(n*dt)+')')
-        ax2.plot(x_array, v, label='v(x, t='+str(n*dt)+')')
-    ax1.plot(x_array, u_ss, label='Steady-State u(x)', linestyle='dashed')
-    ax2.plot(x_array, v_ss, label='Steady-State u(x)', linestyle='dashed')
+        u = np.copy(u_new)
+        v = np.copy(v_new)
+
+        ax1.plot(x_array, u, label=r'$t='+str(n*dt)+'$')
+        ax2.plot(x_array, v, label=r'$t='+str(n*dt)+'$')
+
+    # Value of psi
+    psi = lambda x: x - np.concatenate(deeponet(x[0:N], x[N:], eps, x_array))
+    print('psi deeponet', lg.norm(psi(np.concatenate((u, v)))))
+
+    ax1.plot(x_array, u_ss, label='Steady-State', linestyle='dashed')
+    ax2.plot(x_array, v_ss, label='Steady-State', linestyle='dashed')
 
     # Plotting the final result
     ax1.set_title(r'$u(x,t)$')
     ax2.set_title(r'$v(x,t)$')
-    ax1.legend()
+    ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    plt.figure()
+    t_list = np.arange(0.0, len(psi_list))
+    plt.semilogy(t_list, psi_list, label=r'$\psi(u(t), v(t)$')
+    plt.xlabel(r'$t [s]$')
+    plt.legend()
     plt.show()
 
 if __name__ == '__main__':

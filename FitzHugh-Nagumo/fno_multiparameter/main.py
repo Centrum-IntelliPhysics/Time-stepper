@@ -2,13 +2,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.parameter import Parameter
 import matplotlib.pyplot as plt
 import os
 import time
-import operator
-from functools import reduce
-from functools import partial
 from timeit import default_timer
 from utilities3 import *
 import sys
@@ -92,6 +88,7 @@ class FNO1d(nn.Module):
 
     def forward(self, x):
         grid = self.get_grid(x.shape, x.device)
+        print('grid', grid.shape)
         x = torch.cat((x, grid), dim=-1)
         x = self.fc0(x)
         x = x.permute(0, 2, 1)
@@ -124,200 +121,206 @@ class FNO1d(nn.Module):
         return x
 
     def get_grid(self, shape, device):
+        print('shape', shape)
         batchsize, size_x = shape[0], shape[1]
         gridx = torch.tensor(np.linspace(0, 1, size_x), dtype=torch.float)
         gridx = gridx.reshape(1, size_x, 1).repeat([batchsize, 1, 1])
         return gridx.to(device)
 
-################################################################
-#  configurations
-################################################################
-save_index = 1
 
-batch_size_train = 18000
-batch_size_test = 1200
-learning_rate = 0.001
+def trainFNO():
+    ################################################################
+    #  configurations
+    ################################################################
+    save_index = 1
 
-epochs = 300
-step_size = 50
-gamma = 0.5
+    batch_size_train = 18000
+    batch_size_test = 1200
+    learning_rate = 0.001
 
-modes = 100
-width = 32
+    epochs = 300
+    step_size = 50
+    gamma = 0.5
 
-################################################################
-# load data and data normalization
-################################################################
-reader = MatReader('../data/multiparameter/data_FHN_BF')
-x1_train = reader.read_field('U1_train_branch')
-x2_train = reader.read_field('U2_train_branch')
-x1_init = torch.reshape(x1_train[:,0:200],(-1,200,1))
-x2_init = torch.reshape(x2_train[:,0:200],(-1,200,1))
-x_parameter = torch.reshape(torch.tile(x1_train[:,200::],[1,200]),(-1,200,1))
-x_train = torch.concat((x1_init,x2_init,x_parameter),axis=-1)
+    modes = 100
+    width = 32
 
-y1_train = reader.read_field('V1_train_out')
-y2_train = reader.read_field('V2_train_out')
-y1_train = torch.reshape(y1_train,(-1,200,1))
-y2_train = torch.reshape(y2_train,(-1,200,1))
-y_train = torch.concat((y1_train,y2_train),axis=-1)
+    ################################################################
+    # load data and data normalization
+    ################################################################
+    reader = MatReader('../data/multiparameter/data_FHN_BF')
+    x1_train = reader.read_field('U1_train_branch')
+    x2_train = reader.read_field('U2_train_branch')
+    x1_init = torch.reshape(x1_train[:,0:200],(-1,200,1))
+    x2_init = torch.reshape(x2_train[:,0:200],(-1,200,1))
+    x_parameter = torch.reshape(torch.tile(x1_train[:,200::],[1,200]),(-1,200,1))
+    x_train = torch.concat((x1_init,x2_init,x_parameter),axis=-1)
 
-x1_test = reader.read_field('U1_test_branch')
-x2_test = reader.read_field('U2_test_branch')
-x1_init = torch.reshape(x1_test[:,0:200],(-1,200,1))
-x2_init = torch.reshape(x2_test[:,0:200],(-1,200,1))
-x_parameter = torch.reshape(torch.tile(x1_test[:,200::],[1,200]),(-1,200,1))
-x_test = torch.concat((x1_init,x2_init,x_parameter),axis=-1)
+    y1_train = reader.read_field('V1_train_out')
+    y2_train = reader.read_field('V2_train_out')
+    y1_train = torch.reshape(y1_train,(-1,200,1))
+    y2_train = torch.reshape(y2_train,(-1,200,1))
+    y_train = torch.concat((y1_train,y2_train),axis=-1)
 
-y1_test = reader.read_field('V1_test_out')
-y2_test = reader.read_field('V2_test_out')
-y1_test = torch.reshape(y1_test,(-1,200,1))
-y2_test = torch.reshape(y2_test,(-1,200,1))
-y_test = torch.concat((y1_test,y2_test),axis=-1)
+    x1_test = reader.read_field('U1_test_branch')
+    x2_test = reader.read_field('U2_test_branch')
+    x1_init = torch.reshape(x1_test[:,0:200],(-1,200,1))
+    x2_init = torch.reshape(x2_test[:,0:200],(-1,200,1))
+    x_parameter = torch.reshape(torch.tile(x1_test[:,200::],[1,200]),(-1,200,1))
+    x_test = torch.concat((x1_init,x2_init,x_parameter),axis=-1)
 
-ntrain = y_train.shape[0]
-ntest = y_test.shape[0]
+    y1_test = reader.read_field('V1_test_out')
+    y2_test = reader.read_field('V2_test_out')
+    y1_test = torch.reshape(y1_test,(-1,200,1))
+    y2_test = torch.reshape(y2_test,(-1,200,1))
+    y_test = torch.concat((y1_test,y2_test),axis=-1)
 
-x_normalizer = GaussianNormalizer(x_train)
-x_train = x_normalizer.encode(x_train)
-x_test = x_normalizer.encode(x_test)
+    ntrain = y_train.shape[0]
+    ntest = y_test.shape[0]
 
-y_normalizer = GaussianNormalizer(y_train)
-y_train = y_normalizer.encode(y_train)
-y_test = y_normalizer.encode(y_test)
+    x_normalizer = GaussianNormalizer(x_train)
+    x_train = x_normalizer.encode(x_train)
+    x_test = x_normalizer.encode(x_test)
 
-train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_train, y_train), batch_size=batch_size_train, shuffle=True)
-test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), batch_size=batch_size_test, shuffle=True)
+    y_normalizer = GaussianNormalizer(y_train)
+    y_train = y_normalizer.encode(y_train)
+    y_test = y_normalizer.encode(y_test)
 
-# model
-model = FNO1d(modes, width) #.cuda()
+    train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_train, y_train), batch_size=batch_size_train, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), batch_size=batch_size_test, shuffle=True)
 
-################################################################
-# training and evaluation
-################################################################
-optimizer = Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
-start_time = time.time()
+    # model
+    model = FNO1d(modes, width) #.cuda()
 
-train_error = np.zeros((epochs, 1))
-test_error = np.zeros((epochs, 1))
+    ################################################################
+    # training and evaluation
+    ################################################################
+    optimizer = Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
+    start_time = time.time()
 
-for ep in range(epochs):
-    model.train()
+    train_error = np.zeros((epochs, 1))
+    test_error = np.zeros((epochs, 1))
+
+    for ep in range(epochs):
+        model.train()
+        t1 = default_timer()
+        train_mse = 0
+        for x, y in train_loader:
+            x, y = x, y
+
+            optimizer.zero_grad()
+            out = model(x)
+
+            loss = F.mse_loss(out, y)
+            loss.backward()
+            y = y_normalizer.decode(y)
+            out = y_normalizer.decode(out)
+            #l2 = myloss(out, y)
+            optimizer.step()
+            train_mse += loss.item()
+
+        scheduler.step()
+        model.eval()
+        test_mse = 0.0
+        with torch.no_grad():
+            for x, y in test_loader:
+                x, y = x, y 
+
+                out = model(x)
+                
+                y = y_normalizer.decode(y)
+                out = y_normalizer.decode(out)            
+                test_mse += F.mse_loss(out, y).item()
+
+        train_mse /= len(train_loader)
+        test_mse /= ntest
+
+        train_error[ep,0] = train_mse
+        test_error[ep,0] = test_mse
+        t2 = default_timer()
+        print("Epoch: %d, time: %.3f, Train Loss: %.3e, Test Loss: %.4f" % (ep, t2-t1, train_mse, test_mse))
+
+    elapsed = time.time() - start_time
+    print("\n=============================")
+    print("Training done...")
+    print('Training time: %.3f'%(elapsed))
+    print("=============================\n")
+
+    # ====================================
+    # saving settings
+    # ====================================
+    current_directory = os.getcwd()
+    case = "Results"
+    folder_index = str(save_index)
+
+    results_dir = "/" + case +"/"
+    save_results_to = current_directory + results_dir
+    if not os.path.exists(save_results_to):
+        os.makedirs(save_results_to)
+
+    x = np.linspace(0, epochs-1, epochs)
+    np.savetxt(save_results_to+'/epoch.txt', x)
+    np.savetxt(save_results_to+'/train_error.txt', train_error)
+    np.savetxt(save_results_to+'/test_error.txt', test_error)    
+    save_models_to = save_results_to +"model/"
+    if not os.path.exists(save_models_to):
+        os.makedirs(save_models_to)
+        
+    torch.save(model, save_models_to+'FHN_BF_multiparameter')
+
+    ################################################################
+    # testing
+    ################################################################
+    batch_size_test = 1
+    test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), 
+                                            batch_size = batch_size_test, shuffle=False)    
+    pred = torch.zeros(y_test.shape)
+
+    index = 0
+    error = 0
     t1 = default_timer()
-    train_mse = 0
-    for x, y in train_loader:
-        x, y = x, y
-
-        optimizer.zero_grad()
-        out = model(x)
-
-        loss = F.mse_loss(out, y)
-        loss.backward()
-        y = y_normalizer.decode(y)
-        out = y_normalizer.decode(out)
-        #l2 = myloss(out, y)
-        optimizer.step()
-        train_mse += loss.item()
-
-    scheduler.step()
-    model.eval()
-    test_mse = 0.0
+    dataSegment = "Test"
     with torch.no_grad():
         for x, y in test_loader:
-            x, y = x, y 
-
-            out = model(x)
             
+            x, y = x, y
+            out = model(x)
             y = y_normalizer.decode(y)
             out = y_normalizer.decode(out)            
-            test_mse += F.mse_loss(out, y).item()
+            pred[index,:,:] = out   
+            error += F.mse_loss(out, y).item()       
+            index = index + 1
 
-    train_mse /= len(train_loader)
-    test_mse /= ntest
-
-    train_error[ep,0] = train_mse
-    test_error[ep,0] = test_mse
+    error = error/index
     t2 = default_timer()
-    print("Epoch: %d, time: %.3f, Train Loss: %.3e, Test Loss: %.4f" % (ep, t2-t1, train_mse, test_mse))
+    testing_time = t2-t1
 
-elapsed = time.time() - start_time
-print("\n=============================")
-print("Training done...")
-print('Training time: %.3f'%(elapsed))
-print("=============================\n")
+    x_test = x_normalizer.decode(x_test)
+    y_test = y_normalizer.decode(y_test)
+    scipy.io.savemat(save_results_to+'FHN_BF_multiparameter_test.mat', 
+                    mdict={'x_test': x_test.detach().cpu().numpy(),
+                            'y_test': y_test.numpy(), 
+                            'y_pred': pred.cpu().numpy(),
+                            'test_error': error})  
 
-# ====================================
-# saving settings
-# ====================================
-current_directory = os.getcwd()
-case = "Results"
-folder_index = str(save_index)
+    print("\n=============================")
+    print('Testing error: %.3e'%(error))
+    print("=============================\n")    
 
-results_dir = "/" + case +"/"
-save_results_to = current_directory + results_dir
-if not os.path.exists(save_results_to):
-    os.makedirs(save_results_to)
+    # Plotting the loss history
+    num_epoch = epochs
+    x = np.linspace(1, num_epoch, num_epoch)
+    fig = plt.figure(constrained_layout=False, figsize=(7, 7))
+    gs = fig.add_gridspec(1, 1)
+    ax = fig.add_subplot(gs[0])
+    ax.plot(x, train_error[:,0], color='blue', label='Training Loss')
+    ax.plot(x, test_error[:,0], color='red', label='Testing Loss')
+    ax.set_yscale('log')
+    ax.set_ylabel('Loss')
+    ax.set_xlabel('Epochs')
+    ax.legend(loc='upper left')
+    fig.savefig(save_results_to+'loss_history.png')
 
-x = np.linspace(0, epochs-1, epochs)
-np.savetxt(save_results_to+'/epoch.txt', x)
-np.savetxt(save_results_to+'/train_error.txt', train_error)
-np.savetxt(save_results_to+'/test_error.txt', test_error)    
-save_models_to = save_results_to +"model/"
-if not os.path.exists(save_models_to):
-    os.makedirs(save_models_to)
-    
-torch.save(model, save_models_to+'FHN_BF_multiparameter')
-
-################################################################
-# testing
-################################################################
-batch_size_test = 1
-test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), 
-                                          batch_size = batch_size_test, shuffle=False)    
-pred = torch.zeros(y_test.shape)
-
-index = 0
-error = 0
-t1 = default_timer()
-dataSegment = "Test"
-with torch.no_grad():
-    for x, y in test_loader:
-        
-        x, y = x, y
-        out = model(x)
-        y = y_normalizer.decode(y)
-        out = y_normalizer.decode(out)            
-        pred[index,:,:] = out   
-        error += F.mse_loss(out, y).item()       
-        index = index + 1
-
-error = error/index
-t2 = default_timer()
-testing_time = t2-t1
-
-x_test = x_normalizer.decode(x_test)
-y_test = y_normalizer.decode(y_test)
-scipy.io.savemat(save_results_to+'FHN_BF_multiparameter_test.mat', 
-                  mdict={'x_test': x_test.detach().cpu().numpy(),
-                         'y_test': y_test.numpy(), 
-                         'y_pred': pred.cpu().numpy(),
-                         'test_error': error})  
-
-print("\n=============================")
-print('Testing error: %.3e'%(error))
-print("=============================\n")    
-
-# Plotting the loss history
-num_epoch = epochs
-x = np.linspace(1, num_epoch, num_epoch)
-fig = plt.figure(constrained_layout=False, figsize=(7, 7))
-gs = fig.add_gridspec(1, 1)
-ax = fig.add_subplot(gs[0])
-ax.plot(x, train_error[:,0], color='blue', label='Training Loss')
-ax.plot(x, test_error[:,0], color='red', label='Testing Loss')
-ax.set_yscale('log')
-ax.set_ylabel('Loss')
-ax.set_xlabel('Epochs')
-ax.legend(loc='upper left')
-fig.savefig(save_results_to+'loss_history.png')
+if __name__ == '__main__':
+    trainFNO()
