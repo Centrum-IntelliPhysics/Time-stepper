@@ -88,6 +88,7 @@ class FNO1d(nn.Module):
 
     def forward(self, x):
         grid = self.get_grid(x.shape, x.device)
+        print('grid', grid.shape)
         x = torch.cat((x, grid), dim=-1)
         x = self.fc0(x)
         x = x.permute(0, 2, 1)
@@ -120,6 +121,7 @@ class FNO1d(nn.Module):
         return x
 
     def get_grid(self, shape, device):
+        print('shape', shape)
         batchsize, size_x = shape[0], shape[1]
         gridx = torch.tensor(np.linspace(0, 1, size_x), dtype=torch.float)
         gridx = gridx.reshape(1, size_x, 1).repeat([batchsize, 1, 1])
