@@ -17,5 +17,13 @@ class FNOWrapper:
         self.network = pt.load(self.model_dir + 'FHN_BF_multiparameter')
         print(type(self.network))
 
-    def __call__(self, x):
-        return self.network.forward(x)
+    def __call__(self, u, v, eps):
+        # Preprocessing x = (u, v, eps) stacked in three dimensions
+        x = pt.transpose(pt.vstack((u, v, eps * pt.ones_like(u))), 0, 1)[None,:,:]
+
+        # FNO propagation
+        output = self.network.forward(x)
+
+        # Postprocessing x = (u, v, eps)
+        print('output shape', output.shape)
+        return output[0,:,0], output[0,:,1]

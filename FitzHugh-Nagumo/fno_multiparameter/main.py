@@ -70,26 +70,27 @@ class FNO1d(nn.Module):
         self.modes1 = modes
         self.width = width
         self.padding = 2 # pad the domain if input is non-periodic
-        self.fc0 = nn.Linear(4, self.width) 
+        self.fc0 = nn.Linear(4, self.width, dtype=torch.float) 
 
         self.conv0 = SpectralConv1d(self.width, self.width, self.modes1)
         self.conv1 = SpectralConv1d(self.width, self.width, self.modes1)
         self.conv2 = SpectralConv1d(self.width, self.width, self.modes1)
         self.conv3 = SpectralConv1d(self.width, self.width, self.modes1)
 
-        self.w0 = nn.Conv1d(self.width, self.width, 1)
-        self.w1 = nn.Conv1d(self.width, self.width, 1)
-        self.w2 = nn.Conv1d(self.width, self.width, 1)
-        self.w3 = nn.Conv1d(self.width, self.width, 1)
+        self.w0 = nn.Conv1d(self.width, self.width, 1, dtype=torch.float)
+        self.w1 = nn.Conv1d(self.width, self.width, 1, dtype=torch.float)
+        self.w2 = nn.Conv1d(self.width, self.width, 1, dtype=torch.float)
+        self.w3 = nn.Conv1d(self.width, self.width, 1, dtype=torch.float)
     
 
-        self.fc1 = nn.Linear(self.width, 32)
-        self.fc2 = nn.Linear(32, 2) 
+        self.fc1 = nn.Linear(self.width, 32, dtype=torch.float)
+        self.fc2 = nn.Linear(32, 2, dtype=torch.float) 
 
     def forward(self, x):
         grid = self.get_grid(x.shape, x.device)
-        print('grid', grid.shape)
+        print('grid', grid.shape, grid.dtype)
         x = torch.cat((x, grid), dim=-1)
+        print('dtype x', x.dtype)
         x = self.fc0(x)
         x = x.permute(0, 2, 1)
         #x = F.pad(x, [0,self.padding]) # pad the domain if input is non-periodic
