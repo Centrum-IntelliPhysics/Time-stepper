@@ -60,7 +60,7 @@ class DeepONetDataset(Dataset):
         return self.data_size
 	
     def __getitem__(self, idx):
-        return self.input_data[idx,:], self.output_data[idx]
+        return self.input_data[idx,:], self.output_data[idx,:]
     
 if __name__ == '__main__':
     dataset = DeepONetDataset()
