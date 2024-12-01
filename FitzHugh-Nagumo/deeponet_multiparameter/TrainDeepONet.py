@@ -53,10 +53,10 @@ def train(epoch):
         # Compute Loss
         output = network(data)
         loss = loss_fn(output, target)
-        grad = getGradient()
 
         # Compute loss gradient and do one optimization step
         loss.backward()
+        grad = getGradient()
         optimizer.step()
 
         # Some housekeeping
