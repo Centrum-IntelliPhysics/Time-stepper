@@ -32,7 +32,7 @@ class DeepONet(nn.Module):
 
         self.branch_input_size = 3
         self.p = branch_layers[-1] // 2
-        assert self.p == trunk_layers[-1]
+        assert trunk_layers[-1] == 2 * self.p
 
         self.branch_net = DenseNN(branch_layers)
         self.trunk_net = DenseNN(trunk_layers)
@@ -42,16 +42,17 @@ class DeepONet(nn.Module):
         self.params.extend(self.trunk_net.parameters())
         print('Number of DeepONet Parameters:', sum(p.numel() for p in self.parameters()))
 
-    # The input data x = array([branch_x, trunk_x]) with shape (N_data, branch_size + trunk_size)
+    def getNumberOfParameters(self):
+        return sum(p.numel() for p in self.parameters())
+
+    # The input data x = array([branch_x, trunk_x]) with shape (batch_size, 3 + 1)
     def forward(self, x):
         branch_x = x[:, 0:self.branch_input_size]
         trunk_x = x[:, self.branch_input_size:]
         branch_output = self.branch_net.forward(branch_x)
         trunk_output = self.trunk_net.forward(trunk_x)
-
-        # Extract u_new and v_new from the branch output
-        u_new = branch_output[:,0:self.p]
-        v_new = branch_output[:,self.p:]
-
+     
         # Multiply element-wise and sum over axis=1 (p axis)
-        return pt.sum(u_new, trunk_output, dim=1), pt.sum(v_new * trunk_output, dim=1)
+        u_output = pt.sum(branch_output[:,0:self.p] * trunk_output[:,0:self.p], dim=1)
+        v_output = pt.sum(branch_output[:,self.p:] * trunk_output[:,self.p:], dim=1)
+        return pt.hstack((u_output[:,None], v_output[:,None]))

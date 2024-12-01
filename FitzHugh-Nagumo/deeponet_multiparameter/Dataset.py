@@ -48,7 +48,7 @@ class DeepONetDataset(Dataset):
                         data_index += 1
 
         # Downsampling. Check ratio # datapoints / # parameters!
-        self.data_size = 65536
+        self.data_size = self.total_data_rows#2 * 262144
         indices = pt.randperm(self.total_data_rows)[0:self.data_size]
         self.input_data = input_data_tensor[indices,:]
         self.output_data = output_data_tensor[indices,:]
