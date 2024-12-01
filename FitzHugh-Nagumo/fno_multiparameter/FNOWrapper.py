@@ -6,8 +6,6 @@ import __main__
 setattr(__main__, "FNO1d", main.FNO1d)
 setattr(__main__, "SpectralConv1d", main.SpectralConv1d)
 
-
-
 class FNOWrapper:
     def __init__(self):
         self.modes = 100
