@@ -1,13 +1,15 @@
+import torch as pt
 import numpy as np
-import numpy.linalg as lg
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 
-from DeepONetWrapper import DeepONetWrapper
+from DeepONet import DeepONet
 from EulerTimestepper import fhn_euler_timestepper
 
+pt.set_grad_enabled(False)
+pt.set_default_dtype(pt.float64)
 
-def psi(x, T, dx, dt, params):
+def psi_euler(x, T, dx, dt, params):
     N = x.size // 2
     u, v = x[0:N], x[N:]
 
@@ -19,71 +21,76 @@ def calculateSteadyState(u0, v0, dx, params):
     T_psi = 1.0
 
     x0 = np.concatenate((u0, v0))
-    F = lambda x: psi(x, T_psi, dx, dt, params)
+    F = lambda x: psi_euler(x, T_psi, dx, dt, params)
     ss = opt.newton_krylov(F, x0)
 
     return ss[0:200], ss[200:]
 
-def plotFitzHughNagumoSolution():
-    # Model parameters
-    L = 20.0
-    N = 200
-    dx = L / N
-    x_array = np.linspace(0.0, L, N) / L
+# Load the model from file
+p = 200
+branch_layers = [401, 100, 100, 100, 100, 2*p]
+trunk_layers = [1, 100, 100, 100, 100, 2*p]
+network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
+network.load_state_dict(pt.load('./Results/model_deeponet_fhn.pth', weights_only=True))
 
-    # Initial condition: start from a training point and see
-    # how it converges
-    a0 = -0.03
-    a1 = 2.0
-    delta = 4.0
-    eps = 0.09998733340349023
-    file = '/Users/hannesvdc/Research/Projects/Time-stepper/FitzHugh-Nagumo/data/multiparameter/FHN_BF_Evolution_eps=0p09998733340349023.npy'
-    data = np.load(file)
-    u = data[0,0,0:200]
-    v = data[0,0,200:]
+# Wrapper function that takes a general (u, v) input
+L = 20.0
+N = 200
+deeponet_grid = pt.linspace(0.0, 1.0, N)
+deeponet_grid_ext = deeponet_grid[:,None]
+def deeponet(_u, _v, _eps):
+    input_row = pt.concatenate((_u, _v, pt.tensor([_eps])))
+    input = pt.concatenate((pt.tile(input_row, dims=(N,1)), deeponet_grid_ext), dim=1)
+    output = network.forward(input)
+    return output[:,0], output[:,1]
+def psi(_u, _v, _eps):
+    u_new, v_new = deeponet(_u, _v, _eps)
+    return _u - u_new, _v - v_new
 
-    params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
-    u0 = np.copy(u)
-    v0 = np.copy(v)
-    u_ss, v_ss = calculateSteadyState(u0, v0, dx, params)
-    deeponet = DeepONetWrapper()
-    psi = lambda x: x - np.concatenate(deeponet(x[0:N], x[N:], eps, x_array))
+# Load the Initial Condition
+eps = 0.09998733340349023
+file = '/Users/hannesvdc/Research/Projects/Time-stepper/FitzHugh-Nagumo/data/multiparameter/FHN_BF_Evolution_eps=' + str(eps).replace('.', 'p') + '.npy'
+data = np.load(file)
+u = pt.from_numpy(data[0,0,0:200])
+v = pt.from_numpy(data[0,0,200:])
+x_array = L * deeponet_grid
 
-    # Timestepping
-    dt = 1.0
-    T = 450.0
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.plot(x_array, u, label=r'$t=0.0$')
-    ax2.plot(x_array, v, label=r'$t=0.0$')
-    psi_list = [lg.norm(psi(np.concatenate((u0, v0))))]
-    for n in range(int(T / dt)):
-        u_new, v_new = deeponet(u, v, eps, x_array)
-        psi_list.append(lg.norm(psi(np.concatenate((u_new, v_new)))))
+# Find the steady-state of the Euler timestepper
+dx = L / N
+a0 = -0.03
+a1 = 2.0
+delta = 4.0
+params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
+u0 = np.copy(u.numpy())
+v0 = np.copy(v.numpy())
+u_ss, v_ss = calculateSteadyState(u0, v0, dx, params)
 
-        u = np.copy(u_new)
-        v = np.copy(v_new)
+# Find the steady-state of the DeepONet
+F_deeponet = lambda x: pt.concatenate(psi(pt.from_numpy(x[0:N]), pt.from_numpy(x[N:]), eps)).numpy()
+x0 = np.concatenate((u0, v0))
+deeponet_ss = opt.newton_krylov(F_deeponet, x0)
 
-        ax1.plot(x_array, u, label=r'$t='+str(n*dt)+'$')
-        ax2.plot(x_array, v, label=r'$t='+str(n*dt)+'$')
+# Do Timestepping 
+dt = 1.0
+T = 450.0
+fig, (ax1, ax2) = plt.subplots(1, 2)
+ax1.plot(x_array, u, label=r'$t=0.0$')
+ax2.plot(x_array, v)
+psi_list = [pt.norm(pt.concatenate(psi(u, v, eps)))]
+for n in range(int(T / dt)):
+    u, v = deeponet(u, v, eps)
+    psi_list.append(pt.norm(pt.concatenate(psi(u, v, eps))))
+    print('psi', psi_list[-1])
 
-    # Value of psi
-    psi = lambda x: x - np.concatenate(deeponet(x[0:N], x[N:], eps, x_array))
-    print('psi deeponet', lg.norm(psi(np.concatenate((u, v)))))
-
-    ax1.plot(x_array, u_ss, label='Steady-State', linestyle='dashed')
-    ax2.plot(x_array, v_ss, label='Steady-State', linestyle='dashed')
-
-    # Plotting the final result
-    ax1.set_title(r'$u(x,t)$')
-    ax2.set_title(r'$v(x,t)$')
-    ax2.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-    plt.figure()
-    t_list = np.arange(0.0, len(psi_list))
-    plt.semilogy(t_list, psi_list, label=r'$\psi(u(t), v(t)$')
-    plt.xlabel(r'$t [s]$')
-    plt.legend()
-    plt.show()
-
-if __name__ == '__main__':
-    plotFitzHughNagumoSolution()
+ax1.plot(x_array, u, label=r'$t='+str(n*dt)+'$')
+ax2.plot(x_array, v)
+ax1.plot(x_array, u_ss, label='Euler Newton-GMRES Steady State')
+ax2.plot(x_array, v_ss)
+ax1.plot(x_array, deeponet_ss[0:N], label='DeepONet Newton-GMRES Steady State')
+ax2.plot(x_array, deeponet_ss[N:])
+ax1.set_title(r'$u(x)$')
+ax2.set_title(r'$v(x)$')
+ax1.set_xlabel(r'$x$')
+ax2.set_xlabel(r'$x$')
+ax1.legend()
+plt.show()
