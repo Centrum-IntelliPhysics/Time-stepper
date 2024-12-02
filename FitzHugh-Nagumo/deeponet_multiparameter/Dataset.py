@@ -46,9 +46,6 @@ class DeepONetDataset(Dataset):
 
                     data_index += 200
 
-        print('Final Data Index', data_index)
-        print('Input data shape', input_data_tensor.shape)
-
         # Downsampling. Check ratio # datapoints / # parameters!
         print('Downsampling...')
         self.data_size = 2 * 262144
