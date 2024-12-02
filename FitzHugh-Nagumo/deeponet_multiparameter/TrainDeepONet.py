@@ -23,11 +23,12 @@ print('Done.')
 # Initialize the Network and the Optimizer (Adam)
 print('\nSetting Up DeepONet Neural Net...')
 p = 100
-branch_layers = [401, 100, 100, 2*p]
-trunk_layers = [1, 100, 100, 2*p]
+branch_layers = [401, 100, 100, 100, 100, 2*p]
+trunk_layers = [1, 100, 100, 100, 100, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
 optimizer = optim.Adam(network.parameters(), lr=1.e-3)
-scheduler = sch.StepLR(optimizer, step_size=100, gamma=0.1)
+step = 250
+scheduler = sch.StepLR(optimizer, step_size=6 * step, gamma=0.1)
 print('Data Size / Number of Parameters:', len(dataset) / (1.0*network.getNumberOfParameters()))
 
 # Training Routine
@@ -73,7 +74,7 @@ def train(epoch):
 
 # Do the actual training
 print('\nStarting Training Procedure...')
-n_epochs = 500
+n_epochs = 4 * step
 try:
     for epoch in range(1, n_epochs + 1):
         train(epoch)
