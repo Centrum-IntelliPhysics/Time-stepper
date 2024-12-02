@@ -83,9 +83,9 @@ except KeyboardInterrupt:
 
 # Show the training results
 fig = plt.figure()
-plt.semilogy(train_counter, train_losses, color='tab:blue', label='Training Loss')
-plt.semilogy(train_counter, train_grads, color='tab:orange', label='Loss Gradient')
+plt.semilogy(train_counter, train_losses, color='tab:blue', label='Training Loss', alpha=0.5)
+plt.semilogy(train_counter, train_grads, color='tab:orange', label='Loss Gradient', alpha=0.5)
 plt.legend()
-plt.xlabel('Number of training examples seen')
+plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.show()
