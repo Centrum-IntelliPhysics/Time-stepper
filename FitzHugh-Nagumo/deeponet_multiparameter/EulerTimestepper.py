@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.optimize as opt
 
 def fhn_rhs(u, v, dx, params):
     u_left = np.roll(u, -1)
@@ -41,3 +42,8 @@ def psi(x, T, dx, dt, params):
 
     u_new, v_new = fhn_euler_timestepper(u, v, dx, dt, T, params)
     return np.concatenate((u - u_new, v - v_new))
+
+def calculateSteadyState(x0, T_psi, dx, dt, params):
+    F = lambda x: psi(x, T_psi, dx, dt, params)
+    ss = opt.newton_krylov(F, x0)
+    return ss

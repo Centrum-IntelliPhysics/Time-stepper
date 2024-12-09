@@ -29,8 +29,8 @@ branch_layers = [branch_input_size, 100, 100, 100, 100, 2*p]
 trunk_layers = [trunk_input_size, 100, 100, 100, 100, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
 optimizer = optim.Adam(network.parameters(), lr=1.e-3)
-step = 250
-scheduler = sch.StepLR(optimizer, step_size=6 * step, gamma=0.1)
+step = 100
+scheduler = sch.StepLR(optimizer, step_size=step, gamma=0.1)
 print('Data Size / Number of Parameters:', len(dataset) / (1.0*network.getNumberOfParameters()))
 
 # Training Routine
@@ -67,9 +67,9 @@ def train(epoch):
         train_grads.append(grad)
         train_counter.append((1.0*batch_idx)/len(train_loader) + epoch-1)
         if batch_idx % log_rate == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f} \tLoss Gradient: {:.6f}'.format(
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f} \tLoss Gradient: {:.6f} \tlr: {:.6f}'.format(
                         epoch, batch_idx * len(data), len(train_loader.dataset),
-                        100. * batch_idx / len(train_loader), loss.item(), grad))
+                        100. * batch_idx / len(train_loader), loss.item(), grad, scheduler.get_last_lr()[0]))
 
             pt.save(network.state_dict(), store_directory + 'model_deeponet_fhn.pth')
             pt.save(optimizer.state_dict(), store_directory + 'optimizer_deeponet_fhn.pth')
@@ -85,7 +85,6 @@ except KeyboardInterrupt:
     print('Aborting Training. Plotting Training Convergence.')
 
 # Show the training results
-fig = plt.figure()
 plt.semilogy(train_counter, train_losses, color='tab:blue', label='Training Loss', alpha=0.5)
 plt.semilogy(train_counter, train_grads, color='tab:orange', label='Loss Gradient', alpha=0.5)
 plt.legend()

@@ -80,8 +80,8 @@ def evolveTrajectory():
     params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
     for j in range(n_initials):
         print('initial ', j)
-        u = u0 + 0.1*rng.normal(0.0, 1.0, N)
-        v = v0 + 0.1*rng.normal(0.0, 1.0, N)
+        u = u0 + 0.01*rng.normal(0.0, 1.0, N)
+        v = v0 + 0.01*rng.normal(0.0, 1.0, N)
         evolution = timeSimulation(u, v, dx, dt, T, dt, params)
 
         # Store the time evolution
