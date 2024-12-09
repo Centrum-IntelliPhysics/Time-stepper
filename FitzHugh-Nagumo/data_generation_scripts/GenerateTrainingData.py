@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../deeponet_multiparameter/')
+
 import numpy as np
 import numpy.random as rd
 import matplotlib.pyplot as plt
@@ -12,7 +15,6 @@ def sigmoid(x, x_center=0.0, y_center=0.0, x_scale=1.0, y_scale=1.0):
     return y_scale / (1.0 + np.exp(-(x  - x_center)/x_scale)) + y_center
 
 def generateRandomInitials(plot=False):
-    N = 200
     x_array = np.linspace(0.0, L, N)
 
     n_initials = 20
@@ -52,39 +54,101 @@ def timeSimulation(u0, v0, dx, dt, T, dT, params):
         u, v = fhn_euler_timestepper(u, v, dx, dt, dT, params, verbose=False)
         solution_slices[i,:] = np.concatenate((u, v))
 
-    return solution_slices[2:,:] # Ignore t=0 and t=1
+    return solution_slices
 
-def evolveTrajectories():
+def evolveTrajectory():
     a0 = -0.03
     a1 = 2.0
     delta = 4.0
-    eps_list = np.array([-0.01, 0.0, 0.005, 0.01, 0.013, 0.015, 0.017, 0.02, 0.03, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.92])
-    assert len(eps_list) == 20
+    T = 2.0
+    N = 200
+    M = 2*N
+    dt = 1.e-3
+    dx = L / N
+    n_initials = 20
 
-    T = 450.0
+    # Load the bifurcation diagram to determine a good initial point
+    eps = 0.1
+    load_directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
+    bf_data = np.load(load_directory + 'euler_bf_diagram.npy')
+    x0 = bf_data[0,0:M]
+    u0 = x0[0:N]
+    v0 = x0[N:]
+
+    store_directory = './../data/multiparameter/'
+    rng = rd.RandomState()
+    params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
+    for j in range(n_initials):
+        print('initial ', j)
+        u = u0 + 0.1*rng.normal(0.0, 1.0, N)
+        v = v0 + 0.1*rng.normal(0.0, 1.0, N)
+        evolution = timeSimulation(u, v, dx, dt, T, dt, params)
+
+        # Store the time evolution
+        np.save(store_directory + 'FHN_BF_Evolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
+
+# Start from points on the bifurcation diagram, take some values of epsilon, 
+# Perturb them slightly, and evolve over given time window.
+def evolveBFTrajectories():
+    a0 = -0.03
+    a1 = 2.0
+    delta = 4.0
+    T = 50.0
+    N = 200
+    M = 2*N
     dt = 1.e-3
     dx = L / N
     dT = 1.0
+    n_initials = 20
 
     directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
+    bf_data = np.load(directory + 'euler_bf_diagram.npy')
 
-    u_initials, v_initials = generateRandomInitials(plot=False)
-    n_initials = u_initials.shape[0]
-    for eps_index in range(len(eps_list)):
-        eps = eps_list[eps_index]
+    N_points = bf_data.shape[0]
+    euler_p1 = bf_data[:,0:M]
+    euler_eps1 = bf_data[:,M]
+    euler_p2 = bf_data[:,M+1:2*M+1]
+    euler_eps2 = bf_data[:,2*M+1]
+    print(euler_eps1.shape)
+
+    # Take 10 values of epsilon from each branch.
+    max_index = int(2.0/3.0* N_points)
+    indices = np.linspace(1, max_index, 10, dtype=int)
+    print(indices)
+    rng = rd.RandomState(seed=100)
+    for i in range(len(indices)):
+        eps = euler_eps1[indices[i]]
         print('eps =', eps)
         params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
+        u0 = euler_p1[indices[i], 0:200]
+        v0 = euler_p1[indices[i], 200:]
 
         eps_evolution = np.zeros((n_initials, int(T/dT)-1, 2*N)) # Ignore the first two timesteps
-        for initial_index in range(n_initials):
-            print('Initial ', initial_index+1)
-            u0 = u_initials[initial_index,:]
-            v0 = v_initials[initial_index,:]
+        for j in range(n_initials):
+            print('initial ', j)
+            u = u0 + 0.01*rng.normal(0.0, 1.0, N)
+            v = v0 + 0.01*rng.normal(0.0, 1.0, N)
+            evolution = timeSimulation(u, v, dx, dt, T, dT, params)
+            eps_evolution[j,:,:] = evolution
 
-            evolution = timeSimulation(u0, v0, dx, dt, T, dT, params)
-            eps_evolution[initial_index,:,:] = evolution
+        np.save(directory + 'DeepONet Data/FHN_BF_Evolution_eps=' + str(eps).replace('.', 'p') + '.npy', eps_evolution)
 
-        np.save(directory + 'FHN_Evolution_eps=' + str(round(eps,3)).replace('.', 'p') + '.npy', eps_evolution)     
+    for i in range(len(indices)):
+        eps = euler_eps2[indices[i]]
+        print('eps =', eps)
+        params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
+        u0 = euler_p2[indices[i], 0:200]
+        v0 = euler_p2[indices[i], 200:]
+
+        eps_evolution = np.zeros((n_initials, int(T/dT)-1, 2*N)) # Ignore the first two timesteps
+        for j in range(n_initials):
+            print('initial ', j)
+            u = u0 + 0.1*rng.normal(0.0, 1.0, N)
+            v = v0 + 0.1*rng.normal(0.0, 1.0, N)
+            evolution = timeSimulation(u, v, dx, dt, T, dT, params)
+            eps_evolution[j,:,:] = evolution
+
+        np.save(directory + 'DeepONet Data/FHN_BF_Evolution_eps=' + str(eps).replace('.', 'p') + '.npy', eps_evolution)
 
 if __name__ == '__main__':
-    evolveTrajectories()
+    evolveTrajectory()
