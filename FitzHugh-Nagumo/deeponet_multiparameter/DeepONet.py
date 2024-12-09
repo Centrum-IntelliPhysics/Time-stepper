@@ -30,7 +30,7 @@ class DeepONet(nn.Module):
     def __init__(self, branch_layers, trunk_layers):
         super(DeepONet, self).__init__()
 
-        self.branch_input_size = 401
+        self.branch_input_size = branch_layers[0]
         self.p = branch_layers[-1] // 2
         assert trunk_layers[-1] == 2 * self.p
 
@@ -45,7 +45,7 @@ class DeepONet(nn.Module):
     def getNumberOfParameters(self):
         return sum(p.numel() for p in self.parameters())
 
-    # The input data x = array([branch_x, trunk_x]) with shape (batch_size, 402)
+    # The input data x = array([branch_x, trunk_x]) with shape (batch_size, self.branch_input_size)
     def forward(self, x):
         branch_x = x[:, 0:self.branch_input_size]
         trunk_x = x[:, self.branch_input_size:]

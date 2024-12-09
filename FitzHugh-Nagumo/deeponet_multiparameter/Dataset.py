@@ -66,7 +66,6 @@ class SingleEpsilonDeepONetDataset(Dataset):
     def __init__(self):
         super().__init__()
 
-        # TODO: Calculate new total_data_rows
         n_initials = 20
         n_time_points = 2000
         grid_size = 200
