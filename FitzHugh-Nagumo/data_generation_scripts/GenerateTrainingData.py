@@ -93,62 +93,46 @@ def evolveBFTrajectories():
     a0 = -0.03
     a1 = 2.0
     delta = 4.0
-    T = 50.0
+    T = 2.0
     N = 200
     M = 2*N
     dt = 1.e-3
     dx = L / N
-    dT = 1.0
     n_initials = 20
 
-    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
-    bf_data = np.load(directory + 'euler_bf_diagram.npy')
-
-    N_points = bf_data.shape[0]
+    load_directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
+    store_directory = './../data/multiparameter/'
+    bf_data = np.load(load_directory + 'euler_bf_diagram.npy')
     euler_p1 = bf_data[:,0:M]
     euler_eps1 = bf_data[:,M]
     euler_p2 = bf_data[:,M+1:2*M+1]
     euler_eps2 = bf_data[:,2*M+1]
-    print(euler_eps1.shape)
+    eps_data = np.concatenate((euler_eps1, euler_eps2))
+    x_data = np.vstack((euler_p1, euler_p2))
 
-    # Take 10 values of epsilon from each branch.
-    max_index = int(2.0/3.0* N_points)
-    indices = np.linspace(1, max_index, 10, dtype=int)
-    print(indices)
+    # Take 50 equidistant epsilon values
+    min_eps = np.min(euler_eps2)
+    max_eps = euler_eps1[1100] # Ignore the unstable branch for now.
+    eps_space = np.linspace(min_eps, max_eps, 50)
+
+    def find_nearest(array, value):
+        return (np.abs(array - value)).argmin()
+
     rng = rd.RandomState(seed=100)
-    for i in range(len(indices)):
-        eps = euler_eps1[indices[i]]
-        print('eps =', eps)
+    for eps_index in range(len(eps_space)):
+        eps = eps_space[eps_index]
         params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
-        u0 = euler_p1[indices[i], 0:200]
-        v0 = euler_p1[indices[i], 200:]
+        print('Eps =', eps)
 
-        eps_evolution = np.zeros((n_initials, int(T/dT)-1, 2*N)) # Ignore the first two timesteps
-        for j in range(n_initials):
-            print('initial ', j)
-            u = u0 + 0.01*rng.normal(0.0, 1.0, N)
-            v = v0 + 0.01*rng.normal(0.0, 1.0, N)
-            evolution = timeSimulation(u, v, dx, dt, T, dT, params)
-            eps_evolution[j,:,:] = evolution
+        idx = find_nearest(eps_data, eps)
+        x0 = x_data[idx,:]
 
-        np.save(directory + 'DeepONet Data/FHN_BF_Evolution_eps=' + str(eps).replace('.', 'p') + '.npy', eps_evolution)
+        for initial in range(n_initials):
+            u0 = x0[0:200] + 0.01 * rng.normal(0.0, 1.0, N)
+            v0 = x0[200:] + 0.01 * rng.normal(0.0, 1.0, N)
 
-    for i in range(len(indices)):
-        eps = euler_eps2[indices[i]]
-        print('eps =', eps)
-        params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
-        u0 = euler_p2[indices[i], 0:200]
-        v0 = euler_p2[indices[i], 200:]
-
-        eps_evolution = np.zeros((n_initials, int(T/dT)-1, 2*N)) # Ignore the first two timesteps
-        for j in range(n_initials):
-            print('initial ', j)
-            u = u0 + 0.1*rng.normal(0.0, 1.0, N)
-            v = v0 + 0.1*rng.normal(0.0, 1.0, N)
-            evolution = timeSimulation(u, v, dx, dt, T, dT, params)
-            eps_evolution[j,:,:] = evolution
-
-        np.save(directory + 'DeepONet Data/FHN_BF_Evolution_eps=' + str(eps).replace('.', 'p') + '.npy', eps_evolution)
+            evolution = timeSimulation(u0, v0, dx, dt, T, dt, params)
+            #np.save(store_directory + 'FHN_BF_Evolution_Initial=' + str(initial) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
 if __name__ == '__main__':
-    evolveTrajectory()
+    evolveBFTrajectories()
