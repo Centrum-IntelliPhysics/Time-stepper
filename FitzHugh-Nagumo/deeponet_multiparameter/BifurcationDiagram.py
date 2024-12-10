@@ -126,9 +126,9 @@ def calculateBifurcationDiagram():
     # Continuation Parameters
     M = 2 * N
     tolerance = 1.e-6
-    max_steps = 1900
+    max_steps = 200
     ds_min = 1.e-6
-    ds_max = 0.01
+    ds_max = 0.1
     ds = 0.001
 
     # Calculate the tangent to the path at the initial condition x0
