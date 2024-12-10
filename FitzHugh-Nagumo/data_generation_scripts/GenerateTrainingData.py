@@ -132,7 +132,7 @@ def evolveBFTrajectories():
             v0 = x0[200:] + 0.01 * rng.normal(0.0, 1.0, N)
 
             evolution = timeSimulation(u0, v0, dx, dt, T, dt, params)
-            #np.save(store_directory + 'FHN_BF_Evolution_Initial=' + str(initial) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
+            np.save(store_directory + 'FHN_BF_Evolution_Initial=' + str(initial) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
 if __name__ == '__main__':
     evolveBFTrajectories()
