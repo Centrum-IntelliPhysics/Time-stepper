@@ -27,7 +27,7 @@ branch_layers = [400, 100, 100, 100, 100, 2*p]
 trunk_layers = [2, 100, 100, 100, 100, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
 optimizer = optim.Adam(network.parameters(), lr=1.e-4)
-step = 500
+step = 100
 scheduler = sch.StepLR(optimizer, step_size=step, gamma=0.1)
 print('Data Size / Number of Parameters:', len(dataset) / (1.0*network.getNumberOfParameters()))
 
@@ -37,7 +37,7 @@ train_losses = []
 train_grads = []
 train_counter = []
 store_directory = './Results/'
-log_rate = 100
+log_rate = 200
 
 def getGradient():
     grads = []
@@ -69,8 +69,8 @@ def train(epoch):
                         epoch, batch_idx * len(data), len(train_loader.dataset),
                         100. * batch_idx / len(train_loader), loss.item(), grad, scheduler.get_last_lr()[0]))
 
-            pt.save(network.state_dict(), store_directory + 'model_deeponet_manyeps_fhn.pth')
-            pt.save(optimizer.state_dict(), store_directory + 'optimizer_deeponet_manyeps_fhn.pth')
+            pt.save(network.state_dict(), store_directory + 'model_deeponet_manyeps_new_fhn.pth')
+            pt.save(optimizer.state_dict(), store_directory + 'optimizer_deeponet_manyeps_new_fhn.pth')
 
 # Do the actual training
 print('\nStarting Training Procedure...')

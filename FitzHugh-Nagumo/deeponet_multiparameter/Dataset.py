@@ -12,7 +12,7 @@ class DeepONetDataset(Dataset):
     def __init__(self):
         super().__init__()
 
-        rows_per_epsilon_and_initial = 2**11
+        rows_per_epsilon_and_initial = 2**10 
         n_epsilons = 51
         n_initials_per_epsilon = 20
         self.data_size = rows_per_epsilon_and_initial * n_epsilons * n_initials_per_epsilon
