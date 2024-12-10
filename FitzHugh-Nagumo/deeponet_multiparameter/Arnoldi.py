@@ -26,10 +26,15 @@ network.load_state_dict(pt.load('./Results/model_deeponet_manyeps_fhn.pth', weig
 def deeponet(x, eps):
     input = pt.concatenate((pt.tile(x, dims=(N, 1)), grid_ext, eps * pt.ones((N,1))), dim=1)
     output = network.forward(input)
+
+    # Enforce boundary conditions
+    output[0,:] = output[1,:]
+    output[-1,:] = output[-2,:]
+    
     return pt.concatenate((output[:,0], output[:,1]))
 
 def psi(x0, eps, T_psi, dt):
-    x = pt.from_numpy(x0)
+    x = pt.from_numpy(np.copy(x0))
     n = int(T_psi / dt)
     for _ in range(n):
         x = deeponet(x, eps)
@@ -60,7 +65,7 @@ def calculateEigenvalues():
 
     # Plot the Eigenvalues
     plt.scatter(np.real(psi_eigvals), np.imag(psi_eigvals), label=r'Eigenvalues $\mu$ of $\psi$ ')
-    plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label=r'$1 - \exp\left(\sigma T\right)$ ')
+    #plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label=r'$1 - \exp\left(\sigma T\right)$ ')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')

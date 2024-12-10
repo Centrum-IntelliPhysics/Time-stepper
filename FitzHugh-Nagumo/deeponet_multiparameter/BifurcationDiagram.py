@@ -26,10 +26,15 @@ network.load_state_dict(pt.load('./Results/model_deeponet_manyeps_fhn.pth', weig
 def deeponet(x, eps):
     input = pt.concatenate((pt.tile(x, dims=(N, 1)), grid_ext, eps * pt.ones((N,1))), dim=1)
     output = network.forward(input)
+
+    # Enforce boundary conditions
+    output[0,:] = output[1,:]
+    output[-1,:] = output[-2,:]
+    
     return pt.concatenate((output[:,0], output[:,1]))
 
 def psi(x0, eps, T_psi, dt):
-    x = pt.from_numpy(x0)
+    x = pt.from_numpy(np.copy(x0))
     n = int(T_psi / dt)
     for _ in range(n):
         x = deeponet(x, eps)
@@ -84,7 +89,7 @@ def numericalContinuation(x0, eps0, initial_tangent, M, max_steps, ds, ds_min, d
         F = lambda z: np.append(G(z[0:M], z[M]), N_opt(z))
 
 		# Our implementation uses adaptive timetepping
-        while ds > ds_min:
+        while ds > 1.01 * ds_min:
 			# Predictor: Extrapolation
             x_p = x + ds * tangent[0:M]
             eps_p = eps + ds * tangent[M]
@@ -92,7 +97,7 @@ def numericalContinuation(x0, eps0, initial_tangent, M, max_steps, ds, ds_min, d
 
 			# Corrector: Newton - Krylov
             try:
-                z_new = opt.newton_krylov(F, z_p, f_tol=tolerance)
+                z_new = opt.newton_krylov(F, z_p, f_tol=tolerance, maxiter=5)
                 x = z_new[0:M]
                 eps = z_new[M]
                 x_path.append(np.copy(x))
@@ -105,10 +110,12 @@ def numericalContinuation(x0, eps0, initial_tangent, M, max_steps, ds, ds_min, d
                 break
             except:
                 # Decrease arclength if the corrector fails.
-                ds = max(0.5*ds, ds_min)
-        else:
-            print('Minimal Arclength Size is too large. Aborting.')
-            return x_path, eps_path
+                ds = 0.5*ds
+                print('Reducing ds to', ds)
+
+                if ds < ds_min:
+                    print('Minimal Arclength Size is too large. Aborting.')
+                    return x_path, eps_path
 		
         print_str = 'Step {0:3d}:\t <u>: {1:4f}\t eps: {2:4f}\t ds: {3:6f}'.format(n, np.mean(x_path[-1][0:N]), eps, ds)
         print(print_str)
@@ -127,7 +134,7 @@ def calculateBifurcationDiagram():
     M = 2 * N
     tolerance = 1.e-6
     max_steps = 200
-    ds_min = 1.e-6
+    ds_min = 5.e-4
     ds_max = 0.1
     ds = 0.001
 
