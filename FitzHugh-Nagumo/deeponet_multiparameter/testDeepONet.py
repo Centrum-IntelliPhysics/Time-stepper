@@ -67,7 +67,8 @@ u = x[0:200]
 v = x[200:]
 
 # Find the DeepONet steady state
-x_nn_ss = opt.newton_krylov(lambda x: psi(x, eps, 1.0, dt), x0)
+x_nn_ss = opt.newton_krylov(lambda x: psi(x, eps, 1.0, dt), x0, f_tol=1.e-14, verbose=True)
+np.save('./Results/DeepONet_steadystate_eps=' + str(eps).replace('.', 'p') + '.npy', x_nn_ss)
 
 # Plot the timestepping and Newton-GMRES steady states
 ax1.plot(x_array, u, label=r'$T='+str(n*dt)+'$ (DeepONet)')
