@@ -65,7 +65,7 @@ def train(epoch):
         train_grads.append(grad)
         train_counter.append((1.0*batch_idx)/len(train_loader) + epoch-1)
         if batch_idx % log_rate == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f} \tLoss Gradient: {:.6f} \t Lr: {:.6f}'.format(
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f} \tLoss Gradient: {:.6f} \tlr: {:.6f}'.format(
                         epoch, batch_idx * len(data), len(train_loader.dataset),
                         100. * batch_idx / len(train_loader), loss.item(), grad, scheduler.get_last_lr()[0]))
 
