@@ -15,7 +15,7 @@ N = 200
 L = 20.0
 dt = 0.001
 T = 1.0
-grid = pt.linspace(0.0, 1.0, N)
+grid_ext = pt.linspace(0.0, 1.0, N)[:,None]
 
 p = 200
 branch_layers = [400, 100, 100, 100, 100, 2*p]
@@ -24,7 +24,7 @@ network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
 network.load_state_dict(pt.load('./Results/model_deeponet_manyeps_fhn.pth', weights_only=True))
 
 def deeponet(x, eps):
-    input = pt.concatenate((pt.tile(x, dims=(N, 1)), grid, eps * pt.ones((N,1))), dim=1)
+    input = pt.concatenate((pt.tile(x, dims=(N, 1)), grid_ext, eps * pt.ones((N,1))), dim=1)
     output = network.forward(input)
     return pt.concatenate((output[:,0], output[:,1]))
 
@@ -121,7 +121,7 @@ Routine that calculates the bifurcation diagram of the DeepONet for the Fitzhugh
 def calculateBifurcationDiagram():
     # Load the initial condition from file.
     eps0 = 0.1
-    x0 = np.load('./Results/DeepONet_steady_state_eps=' + str(eps0).replace('.', 'p') + '.npy')
+    x0 = np.load('./Results/DeepONet_steadystate_eps=' + str(eps0).replace('.', 'p') + '.npy')
 
     # Continuation Parameters
     M = 2 * N
