@@ -63,9 +63,6 @@ x_ss = calculateSteadyState(x0, 1.0, dx, dt, params)
 
 # Do Timestepping 
 T = 100.0
-fig, (ax1, ax2) = plt.subplots(1, 2)
-ax1.plot(x_array, u0, label=r'$T=0.0$')
-ax2.plot(x_array, v0)
 x = pt.concatenate((u0, v0))
 for n in range(int(T / dt)+1):
     if n % 1000 == 0:
@@ -75,11 +72,15 @@ u = x[0:200]
 v = x[200:]
 
 # Find the DeepONet steady state
+print('Initial Guess x0 =', x0)
 print('Initial Psi =', lg.norm(psi(x0, eps, 1.0, dt)))
 x_nn_ss = opt.newton_krylov(lambda x: psi(x, eps, 1.0, dt), x0, f_tol=1.e-14, verbose=True)
 np.save('./Results/DeepONet_steadystate_eps=' + str(eps).replace('.', 'p') + '.npy', x_nn_ss)
 
 # Plot the timestepping and Newton-GMRES steady states
+fig, (ax1, ax2) = plt.subplots(1, 2)
+ax1.plot(x_array, u0, label=r'$T=0.0$')
+ax2.plot(x_array, v0)
 ax1.plot(x_array, u, label=r'$T='+str(n*dt)+'$ (DeepONet)')
 ax2.plot(x_array, v)
 ax1.plot(x_array, x_ss[0:200], label='Euler Steady State')

@@ -30,7 +30,7 @@ def deeponet(x, eps):
     # Enforce boundary conditions
     output[0,:] = output[1,:]
     output[-1,:] = output[-2,:]
-    
+
     return pt.concatenate((output[:,0], output[:,1]))
 
 def psi(x0, eps, T_psi, dt):
@@ -144,9 +144,8 @@ def calculateBifurcationDiagram():
     initial_tangent = computeTangent(lambda v: dGdx_v(x0, v, eps0), dGdeps(x0, eps0), random_tangent / lg.norm(random_tangent), M, tolerance)
     initial_tangent = initial_tangent / lg.norm(initial_tangent)
 
-    # Do actual numerical continuation in both directions
-    if initial_tangent[-1] < 0.0: # Decreasing eps
-        print('Increasing eps first')
+    # Do actual numerical continuation in both directions, but do increasing eps first
+    if initial_tangent[-1] < 0.0:
         sign = 1.0
     else:
         sign = -1.0

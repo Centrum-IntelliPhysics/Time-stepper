@@ -30,7 +30,7 @@ def deeponet(x, eps):
     # Enforce boundary conditions
     output[0,:] = output[1,:]
     output[-1,:] = output[-2,:]
-    
+
     return pt.concatenate((output[:,0], output[:,1]))
 
 def psi(x0, eps, T_psi, dt):
@@ -51,8 +51,17 @@ def calculateEigenvalues():
     r_diff = 1.e-8
     d_psi_mvp = lambda w: (psi(x0 + r_diff * w, eps0, T_psi, dt) - psi(x0, eps0, T_psi, dt)) / r_diff
     D_psi = slg.LinearOperator(shape=(2*N, 2*N), matvec=d_psi_mvp)
-    psi_eigvals = slg.eigs(D_psi, k=2*N-2, which='LM', return_eigenvectors=False)
+    #psi_eigvals = slg.eigs(D_psi, k=2*N-2, which='SM', return_eigenvectors=False)
     print('Done.')
+
+    # Calculate the eigenvalues using the Francis QR method
+    A = np.zeros((2*N, 2*N))
+    I = np.eye(2*N)
+    for row in range(2*N):
+        print(row)
+        A[:,row] = D_psi.matvec(I[:,row])
+    print('Running QR Method')
+    psi_eigvals = lg.eigvals(A)
 
     # Load eigenvalues of the right-hand side
     euler_eigvals = np.load('./Results/euler_eigenvalues_Tpsi=1p0.npy')
