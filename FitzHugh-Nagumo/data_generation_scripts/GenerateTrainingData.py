@@ -89,7 +89,52 @@ def evolveTrajectory():
 
 # Start from points on the bifurcation diagram, take some values of epsilon, 
 # Perturb them slightly, and evolve over given time window.
-def evolveBFTrajectories():
+def evolveStableBFTrajectories():
+    a0 = -0.03
+    a1 = 2.0
+    delta = 4.0
+    T = 2.0
+    N = 200
+    M = 2*N
+    dt = 1.e-3
+    dx = L / N
+    n_initials = 20
+
+    load_directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
+    store_directory = './../data/multiparameter/'
+    bf_data = np.load(load_directory + 'euler_bf_diagram.npy')
+    euler_p1 = bf_data[:,0:M]
+    euler_eps1 = bf_data[:,M]
+    euler_p2 = bf_data[:,M+1:2*M+1]
+    euler_eps2 = bf_data[:,2*M+1]
+    eps_data = np.concatenate((euler_eps1, euler_eps2))
+    x_data = np.vstack((euler_p1, euler_p2))
+
+    # Take 50 equidistant epsilon values
+    min_eps = 0.02 #np.min(euler_eps2)
+    max_eps = euler_eps1[1100] # Ignore the unstable branch for now.
+    eps_space = np.linspace(min_eps, max_eps, 50)
+
+    def find_nearest(array, value):
+        return (np.abs(array - value)).argmin()
+
+    rng = rd.RandomState(seed=100)
+    for eps_index in range(len(eps_space)):
+        eps = eps_space[eps_index]
+        params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
+        print('Eps =', eps)
+
+        idx = find_nearest(eps_data, eps)
+        x0 = x_data[idx,:]
+
+        for initial in range(n_initials):
+            u0 = x0[0:200] + 0.1 * rng.normal(0.0, 1.0, N)
+            v0 = x0[200:] + 0.1 * rng.normal(0.0, 1.0, N)
+
+            evolution = timeSimulation(u0, v0, dx, dt, T, dt, params)
+            np.save(store_directory + 'FHN_BF_Evolution_Initial=' + str(initial) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
+
+def evolveHopfBFTrajectories():
     a0 = -0.03
     a1 = 2.0
     delta = 4.0
@@ -112,7 +157,7 @@ def evolveBFTrajectories():
 
     # Take 50 equidistant epsilon values
     min_eps = np.min(euler_eps2)
-    max_eps = euler_eps1[1100] # Ignore the unstable branch for now.
+    max_eps = 0.02 # Focus only on the Hopf bifurcation dynamics
     eps_space = np.linspace(min_eps, max_eps, 50)
 
     def find_nearest(array, value):
@@ -128,11 +173,11 @@ def evolveBFTrajectories():
         x0 = x_data[idx,:]
 
         for initial in range(n_initials):
-            u0 = x0[0:200] + 0.01 * rng.normal(0.0, 1.0, N)
-            v0 = x0[200:] + 0.01 * rng.normal(0.0, 1.0, N)
+            u0 = x0[0:200] + 0.1 * rng.normal(0.0, 1.0, N)
+            v0 = x0[200:] + 0.1 * rng.normal(0.0, 1.0, N)
 
             evolution = timeSimulation(u0, v0, dx, dt, T, dt, params)
             np.save(store_directory + 'FHN_BF_Evolution_Initial=' + str(initial) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
 if __name__ == '__main__':
-    evolveBFTrajectories()
+    evolveHopfBFTrajectories()
