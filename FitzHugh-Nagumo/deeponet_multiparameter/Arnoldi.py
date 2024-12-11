@@ -14,7 +14,6 @@ pt.set_default_dtype(pt.float64)
 N = 200
 L = 20.0
 dt = 0.001
-T = 1.0
 grid_ext = pt.linspace(0.0, 1.0, N)[:,None]
 
 p = 200
@@ -78,7 +77,7 @@ def calculateEigenvalues():
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
-    plt.title('Timestepper Eigenvalues')
+    plt.title(r'DeepONet $\psi$ Eigenvalues')
     plt.legend()
 
     plt.figure()

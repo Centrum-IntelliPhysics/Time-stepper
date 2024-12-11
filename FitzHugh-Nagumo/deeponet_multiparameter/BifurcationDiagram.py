@@ -157,7 +157,8 @@ def calculateBifurcationDiagram():
     x2_path = np.array(x2_path)
     eps1_path = np.array(eps1_path)
     eps2_path = np.array(eps2_path)
-    np.save('./Results/bf_diagram.npy', np.hstack((x1_path, eps1_path[:,np.newaxis], x2_path, eps2_path[:,np.newaxis])))
+    np.save('./Results/bf_diagram_branch1.npy', np.hstack((x1_path, eps1_path[:,np.newaxis])))
+    np.save('./Results/bf_diagram_branch2.npy', np.hstack((x2_path, eps2_path[:,np.newaxis])))
 
     # Plot both branches
     plot_x1_path = np.average(x1_path[:, 0:N], axis=1)
@@ -167,8 +168,6 @@ def calculateBifurcationDiagram():
     plt.xlabel(r'$\varepsilon$')
     plt.ylabel(r'$<u>$')
     plt.show()
-
-
 
 if __name__ == '__main__':
     calculateBifurcationDiagram()
