@@ -11,4 +11,4 @@ FitzHugh-Nagumo/data/multiparameter/old_data/data_FHN.mat
 *.out
 **/*.json
 **/.vscode
-FitzHugh-Nagumo/data/multiparameter/*.npy
+**/*.npy
