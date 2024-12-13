@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../')
+
 import torch as pt
 import numpy as np
 import numpy.random as rd
@@ -12,8 +15,10 @@ pt.set_default_dtype(pt.float64)
 
 # Load the model from file
 p = 200
-branch_layers = [400, 100, 100, 100, 100, 2*p]
-trunk_layers = [1, 100, 100, 100, 100, 2*p]
+branch_input_size = 400
+trunk_input_size = 1
+branch_layers = [branch_input_size, 200, 200, 200, 200, 2*p]
+trunk_layers  = [trunk_input_size,  200, 200, 200, 200, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
 network.load_state_dict(pt.load('./Results/model_deeponet_fhn.pth', weights_only=True))
 
@@ -30,11 +35,11 @@ def deeponet(x):
 # Load the Initial Condition
 eps = 0.1
 rng = rd.RandomState()
-data_directory = '../data/multiparameter/'
-file = 'FHN_BF_Evolution_Initial=0_eps=0p1_dT=0p001.npy'
+data_directory = '../data/singleparameter/'
+file = 'FHN_SingleEpsilon_Evolution_Initial=0_eps=0p1_dT=0p001.npy'
 data = np.load(data_directory + file)
-u = pt.from_numpy(data[0,0:200] + 0.01 * rng.normal(0.0, 1.0, 200))
-v = pt.from_numpy(data[0,200:]+ 0.01 * rng.normal(0.0, 1.0, 200))
+u = pt.from_numpy(data[0,0:200] + 0.1 * rng.normal(0.0, 1.0, 200))
+v = pt.from_numpy(data[0,200:]+ 0.1 * rng.normal(0.0, 1.0, 200))
 x_array = L * deeponet_grid
 
 # Find the steady-state of the Euler timestepper
@@ -62,7 +67,7 @@ v = x[200:]
 
 # Calculate the deeponet steady state using Newton-GMRES
 def psi(x0, T_psi, dt):
-    x = pt.from_numpy(x0)
+    x = pt.from_numpy(np.copy(x0))
 
     n = int(T_psi / dt)
     for _ in range(n):
