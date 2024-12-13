@@ -74,6 +74,7 @@ def psi(x0, T_psi, dt):
         x = deeponet(x)
     return x0 - x.numpy()
 x_nn_ss = opt.newton_krylov(lambda x: psi(x, 1.0, dt), x0)
+np.save('./Results/DeepONet_steadystate.npy', x_nn_ss)
 
 ax1.plot(x_array, u, label=r'$T ='+str(n*dt)+'$ (DeepONet)')
 ax2.plot(x_array, v)
