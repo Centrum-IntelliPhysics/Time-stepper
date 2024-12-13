@@ -29,7 +29,7 @@ def evolveTrajectory():
     L = 20.0
     dt = 1.e-3
     dx = L / N
-    n_initials = 500
+    n_initials = 1000
 
     # Load the bifurcation diagram to determine a good initial point
     eps = 0.1
