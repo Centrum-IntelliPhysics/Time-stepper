@@ -11,7 +11,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         super().__init__()
 
         n_initials = 1000
-        n_datarows_per_initial = 2**12
+        n_datarows_per_initial = 2**11
         grid_size = 200
         self.total_data_rows = n_initials * n_datarows_per_initial
 
@@ -24,7 +24,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         # Load all data in the file
         directory = './../data/singleparameter/'
         for initial_index in range(n_initials):
-            file = 'FHN_SingleEpsilon_Evolution_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
+            file = 'FHN_SingleEpsilon_SineEvolution_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
             file_data = pt.from_numpy(np.load(directory + file))
 
             # Go through the file and put all timesteps in a large tensor

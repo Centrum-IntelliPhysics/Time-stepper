@@ -3,6 +3,7 @@ sys.path.append('../')
 
 import numpy as np
 import numpy.random as rd
+import matplotlib.pyplot as plt
 
 from EulerTimestepper import fhn_euler_timestepper
 
@@ -13,13 +14,17 @@ def timeSimulation(u0, v0, dx, dt, T, dT, params):
 
     u = np.copy(u0)
     v = np.copy(v0)
+    report_n = int(dT / dt)
     for i in range(n_entries-1):
         u, v = fhn_euler_timestepper(u, v, dx, dt, dT, params, verbose=False)
-        solution_slices[i,:] = np.concatenate((u, v))
+
+        if i % report_n == 0:
+            index = i // report_n
+            solution_slices[index+1,:] = np.concatenate((u, v))
 
     return solution_slices
 
-def evolveTrajectory():
+def sampleNoiseInitial():
     a0 = -0.03
     a1 = 2.0
     delta = 4.0
@@ -51,5 +56,49 @@ def evolveTrajectory():
         # Store the time evolution
         np.save(store_directory + 'FHN_SingleEpsilon_Evolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
+def sampleSinusoidalInitial():
+    eps = 0.1
+    a0 = -0.03
+    a1 = 2.0
+    delta = 4.0
+    T = 20.0
+    N = 200
+    M = 2*N
+    L = 20.0
+    dt = 1.e-3
+    dT = 10 * dt
+    dx = L / N
+    n_initials = 1000
+    params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
+
+    base_fn = lambda x: np.sin(2*np.pi*x - np.pi/2.0) + 1
+    x_array = np.linspace(0.0, 1.0, N)
+    initial_u_means = []
+    initial_v_means = []
+    store_directory = './../data/singleparameter/'
+    rng = rd.RandomState()
+    for j in range(n_initials):
+        print('initial ', j)
+        u = base_fn(x_array) * rng.normal(0.0, 1.0, N) - 0.25
+        v = base_fn(x_array) * rng.normal(0.0, 1.0, N)
+        
+        #plt.plot(x_array, u)
+        #plt.plot(x_array, v)
+        #plt.show()
+        initial_u_means.append(np.average(u))
+        initial_v_means.append(np.average(v))
+        evolution = timeSimulation(u, v, dx, dt, T, dT, params)
+
+        # Store the time evolution
+        np.save(store_directory + 'FHN_SingleEpsilon_SineEvolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
+
+    # Make a histogram plot
+    plt.hist(initial_u_means, bins=50, density=True, label=r'Histogram of $<u>$')
+    plt.legend()
+    plt.figure()
+    plt.hist(initial_v_means, bins=50, density=True, label=r'Histogram of $<v>$')
+    plt.legend()
+    plt.show()
+
 if __name__ == '__main__':
-    evolveTrajectory()
+    sampleSinusoidalInitial()
