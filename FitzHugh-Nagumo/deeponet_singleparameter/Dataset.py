@@ -4,9 +4,8 @@ import numpy as np
 from torch.utils.data import Dataset
     
 class SingleEpsilonDeepONetDataset(Dataset):
-    def __init__(self, device=pt.device("cpu"), dtype=pt.float64):
+    def __init__(self, device, dtype):
         super().__init__()
-        print('Using Device and dtype', device, dtype)
 
         n_initials = 1000
         n_datarows_per_initial = 2**11
@@ -61,7 +60,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         return self.input_data[idx,:], self.output_data[idx,:]
     
 if __name__ == '__main__':
-    dataset = SingleEpsilonDeepONetDataset()
+    dataset = SingleEpsilonDeepONetDataset(device="cpu", dtype=pt.float64)
 
     import time
     time.sleep(120)
