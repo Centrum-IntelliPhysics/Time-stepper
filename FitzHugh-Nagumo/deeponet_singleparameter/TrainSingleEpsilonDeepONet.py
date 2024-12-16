@@ -11,11 +11,12 @@ import matplotlib.pyplot as plt
 
 # Just some sanity pytorch settings
 pt.set_grad_enabled(True)
-pt.set_default_dtype(pt.float64)
+device = pt.device("mps") if pt.backends.mps.is_available() else pt.device("cpu")
+dtype = pt.float32 if pt.backends.mps.is_available() else pt.float64
 
 # Load the data in memory
 print('Loading Training Data ...')
-dataset = SingleEpsilonDeepONetDataset()
+dataset = SingleEpsilonDeepONetDataset(device, dtype)
 batch_size = 128
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 print('Done.')
@@ -27,7 +28,7 @@ branch_input_size = 400
 trunk_input_size = 1
 branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
 trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 2*p]
-network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
+network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers).to(device, dtype=dtype)
 optimizer = optim.Adam(network.parameters(), lr=1.e-4)
 step = 100
 scheduler = sch.StepLR(optimizer, step_size=step, gamma=0.1)

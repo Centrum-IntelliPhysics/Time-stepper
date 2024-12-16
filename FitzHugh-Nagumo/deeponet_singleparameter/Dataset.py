@@ -2,30 +2,30 @@ import torch as pt
 import numpy as np
 
 from torch.utils.data import Dataset
-
-# Sanity Settings
-pt.set_default_dtype(pt.float64)
     
 class SingleEpsilonDeepONetDataset(Dataset):
-    def __init__(self):
+    def __init__(self, device=pt.device("cpu"), dtype=pt.float64):
         super().__init__()
+        print('Using Device and dtype', device, dtype)
 
         n_initials = 1000
         n_datarows_per_initial = 2**11
         grid_size = 200
         self.total_data_rows = n_initials * n_datarows_per_initial
 
-        grid = pt.linspace(0.0, 1.0, grid_size)
-        self.input_data = pt.zeros((self.total_data_rows, 2 * grid_size + 1), requires_grad=False) # (u(t), v(t), x_i)
-        self.output_data = pt.zeros((self.total_data_rows, 2), requires_grad=False) # (u(x_i, t+1), v(x_i, t+1))
+        grid = pt.linspace(0.0, 1.0, grid_size, device=device, dtype=dtype)
+        self.input_data = pt.zeros((self.total_data_rows, 2 * grid_size + 1), requires_grad=False, device=device, dtype=dtype) # (u(t), v(t), x_i)
+        self.output_data = pt.zeros((self.total_data_rows, 2), requires_grad=False, device=device, dtype=dtype) # (u(x_i, t+1), v(x_i, t+1))
         
         data_index = 0
 
         # Load all data in the file
         directory = './../data/singleparameter/'
         for initial_index in range(n_initials):
+            print('Reading file', initial_index)
             file = 'FHN_SingleEpsilon_SineEvolution_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
             file_data = pt.from_numpy(np.load(directory + file))
+            file_data = file_data.to(dtype=dtype, device=device)
 
             # Go through the file and put all timesteps in a large tensor
             n_time_points = file_data.shape[0]
