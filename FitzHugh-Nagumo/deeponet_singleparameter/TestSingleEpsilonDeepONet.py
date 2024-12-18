@@ -36,7 +36,7 @@ def deeponet(x):
 eps = 0.1
 rng = rd.RandomState()
 data_directory = '../data/singleparameter/'
-file = 'FHN_SingleEpsilon_SineEvolution_Initial=0_eps=0p1_dT=0p001.npy'
+file = 'FHN_SingleEpsilon_SigmoidEvolution_Initial=0_eps=0p1_dT=0p001.npy'
 data = np.load(data_directory + file)
 u = pt.from_numpy(data[0,0:200]).to(dtype=pt.float32)
 v = pt.from_numpy(data[0,200:]).to(dtype=pt.float32)
@@ -45,7 +45,7 @@ x_array = L * deeponet_grid
 # Find the steady-state of the Euler timestepper
 dx = L / N
 dt = 1.e-3
-dT = 10 * dt
+dT = 100 * dt
 a0 = -0.03
 a1 = 2.0
 delta = 4.0

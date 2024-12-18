@@ -65,12 +65,12 @@ def sampleSigmoidInitial():
     a0 = -0.03
     a1 = 2.0
     delta = 4.0
-    T = 20.0
+    T = 200.0
     N = 200
     M = 2*N
     L = 20.0
     dt = 1.e-3
-    dT = 10 * dt
+    dT = 100 * dt
     dx = L / N
     n_initials = 1000
     params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
