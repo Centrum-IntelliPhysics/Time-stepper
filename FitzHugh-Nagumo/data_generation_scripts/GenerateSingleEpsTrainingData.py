@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 
 from EulerTimestepper import fhn_euler_timestepper
 
+# Original sigmoid between 0 and 1. To make it between -1 and 1, shift by y_center=-0.5 and y_scale=2
+def sigmoid(x, x_center=0.0, y_center=0.0, x_scale=1.0, y_scale=1.0):
+    return y_scale / (1.0 + np.exp(-(x  - x_center)/x_scale)) + y_center
+
 def timeSimulation(u0, v0, dx, dt, T, dT, params):
     n_entries = int(T / dT) + 1
     solution_slices = np.zeros((n_entries, len(u0) + len(v0)))
@@ -56,7 +60,7 @@ def sampleNoiseInitial():
         # Store the time evolution
         np.save(store_directory + 'FHN_SingleEpsilon_Evolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
-def sampleSinusoidalInitial():
+def sampleSigmoidInitial():
     eps = 0.1
     a0 = -0.03
     a1 = 2.0
@@ -71,26 +75,29 @@ def sampleSinusoidalInitial():
     n_initials = 1000
     params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
 
-    base_fn = lambda x: np.sin(2*np.pi*x - np.pi/2.0) + 1
-    x_array = np.linspace(0.0, 1.0, N)
+    rng = rd.RandomState(seed=100)
+    x_array = np.linspace(0.0, L, N)
+    u_x_shifts = rng.uniform(4.0, 16.0, size=n_initials)
+    u_x_scale = rng.uniform(0.5, 2, size=n_initials)
+    v_x_shifts = rng.uniform(5.0, 15.0, size=n_initials)
+    v_x_scale = rng.uniform(0.5, 2, size=n_initials)
+    y_shifts = rng.uniform(-2.0, 0.0, size=n_initials)
+    y_scales = rng.uniform(1.0, 4.0, size=n_initials)
     initial_u_means = []
     initial_v_means = []
     store_directory = './../data/singleparameter/'
     rng = rd.RandomState()
     for j in range(n_initials):
         print('initial ', j)
-        u = base_fn(x_array) * rng.normal(0.0, 1.0, N) - 0.25
-        v = base_fn(x_array) * rng.normal(0.0, 1.0, N)
+        u = sigmoid(x_array, u_x_shifts[j], y_shifts[j], u_x_scale[j], y_scales[j])
+        v = sigmoid(x_array, v_x_shifts[j], y_shifts[j], v_x_scale[j], y_scales[j])
         
-        #plt.plot(x_array, u)
-        #plt.plot(x_array, v)
-        #plt.show()
         initial_u_means.append(np.average(u))
         initial_v_means.append(np.average(v))
         evolution = timeSimulation(u, v, dx, dt, T, dT, params)
 
         # Store the time evolution
-        np.save(store_directory + 'FHN_SingleEpsilon_SineEvolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
+        np.save(store_directory + 'FHN_SingleEpsilon_SigmoidEvolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
     # Make a histogram plot
     plt.hist(initial_u_means, bins=50, density=True, label=r'Histogram of $<u>$')
@@ -101,4 +108,4 @@ def sampleSinusoidalInitial():
     plt.show()
 
 if __name__ == '__main__':
-    sampleSinusoidalInitial()
+    sampleSigmoidInitial()

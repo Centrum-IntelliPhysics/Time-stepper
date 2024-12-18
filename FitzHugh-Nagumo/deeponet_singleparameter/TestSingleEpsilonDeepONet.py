@@ -11,14 +11,14 @@ from DeepONet import DeepONet
 from EulerTimestepper import calculateSteadyState
 
 pt.set_grad_enabled(False)
-pt.set_default_dtype(pt.float64)
+pt.set_default_dtype(pt.float32)
 
 # Load the model from file
 p = 200
 branch_input_size = 400
 trunk_input_size = 1
-branch_layers = [branch_input_size, 200, 200, 200, 200, 2*p]
-trunk_layers  = [trunk_input_size,  200, 200, 200, 200, 2*p]
+branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
+trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
 network.load_state_dict(pt.load('./Results/model_deeponet_fhn.pth', weights_only=True))
 
@@ -36,15 +36,16 @@ def deeponet(x):
 eps = 0.1
 rng = rd.RandomState()
 data_directory = '../data/singleparameter/'
-file = 'FHN_SingleEpsilon_Evolution_Initial=0_eps=0p1_dT=0p001.npy'
+file = 'FHN_SingleEpsilon_SineEvolution_Initial=0_eps=0p1_dT=0p001.npy'
 data = np.load(data_directory + file)
-u = pt.from_numpy(data[0,0:200] + 0.1 * rng.normal(0.0, 1.0, 200))
-v = pt.from_numpy(data[0,200:]+ 0.1 * rng.normal(0.0, 1.0, 200))
+u = pt.from_numpy(data[0,0:200]).to(dtype=pt.float32)
+v = pt.from_numpy(data[0,200:]).to(dtype=pt.float32)
 x_array = L * deeponet_grid
 
 # Find the steady-state of the Euler timestepper
 dx = L / N
 dt = 1.e-3
+dT = 10 * dt
 a0 = -0.03
 a1 = 2.0
 delta = 4.0
@@ -58,30 +59,30 @@ fig, (ax1, ax2) = plt.subplots(1, 2)
 ax1.plot(x_array, u, label=r'$T=0.0$')
 ax2.plot(x_array, v)
 x = pt.concatenate((u, v))
-for n in range(int(T / dt)+1):
+for n in range(int(T / dT)+1):
     if n % 1000 == 0:
-        print('t =', n * dt)
+        print('t =', n * dT)
     x = deeponet(x)
 u = x[0:200]
 v = x[200:]
 
 # Calculate the deeponet steady state using Newton-GMRES
-def psi(x0, T_psi, dt):
+def psi(x0, T_psi):
     x = pt.from_numpy(np.copy(x0))
 
-    n = int(T_psi / dt)
+    n = int(T_psi / dT)
     for _ in range(n):
         x = deeponet(x)
     return x0 - x.numpy()
-x_nn_ss = opt.newton_krylov(lambda x: psi(x, 1.0, dt), x0)
+x_nn_ss = opt.newton_krylov(lambda x: psi(x, 1.0), x0)
 np.save('./Results/DeepONet_steadystate.npy', x_nn_ss)
 
-ax1.plot(x_array, u, label=r'$T ='+str(n*dt)+'$ (DeepONet)')
+ax1.plot(x_array, u, label=r'$T ='+str(n*dT)+'$ (DeepONet)')
 ax2.plot(x_array, v)
 ax1.plot(x_array, x_ss[0:200], label='Euler Steady State')
 ax2.plot(x_array, x_ss[200:])
-ax1.plot(x_array, x_nn_ss[0:200], label='DeepONet Steady State')
-ax2.plot(x_array, x_nn_ss[200:])
+#ax1.plot(x_array, x_nn_ss[0:200], label='DeepONet Steady State')
+#ax2.plot(x_array, x_nn_ss[200:])
 ax1.set_title(r'$u(x)$')
 ax2.set_title(r'$v(x)$')
 ax1.set_xlabel(r'$x$')

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 # Just some sanity pytorch settings
 pt.set_grad_enabled(True)
-if pt.backend.mps.is_available():
+if pt.backends.mps.is_available():
     device = pt.device("mps")
     dtype = pt.float32
 else:
@@ -69,10 +69,10 @@ def train(epoch):
 
         # Some housekeeping
         train_losses.append(loss.item())
-        train_grads.append(grad)
+        train_grads.append(grad.cpu())
         train_counter.append((1.0*batch_idx)/len(train_loader) + epoch-1)
         if batch_idx % log_rate == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {%.6E} \tLoss Gradient: {%.6E} \tlr: {%.2E}'.format(
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6E} \tLoss Gradient: {:.6E} \tlr: {:.2E}'.format(
                         epoch, batch_idx * len(data), len(train_loader.dataset),
                         100. * batch_idx / len(train_loader), loss.item(), grad, scheduler.get_last_lr()[0]))
 
