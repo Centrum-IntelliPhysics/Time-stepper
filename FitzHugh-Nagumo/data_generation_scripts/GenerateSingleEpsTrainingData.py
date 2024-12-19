@@ -2,10 +2,11 @@ import sys
 sys.path.append('../')
 
 import numpy as np
+import numpy.linalg as lg
 import numpy.random as rd
 import matplotlib.pyplot as plt
 
-from EulerTimestepper import fhn_euler_timestepper
+from EulerTimestepper import fhn_euler_timestepper, calculateSteadyState, psi
 
 # Original sigmoid between 0 and 1. To make it between -1 and 1, shift by y_center=-0.5 and y_scale=2
 def sigmoid(x, x_center=0.0, y_center=0.0, x_scale=1.0, y_scale=1.0):
@@ -60,52 +61,50 @@ def sampleNoiseInitial():
         # Store the time evolution
         np.save(store_directory + 'FHN_SingleEpsilon_Evolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
-def sampleSigmoidInitial():
+def sampleCosinePerturbations():
+    # Model parameters
     eps = 0.1
     a0 = -0.03
     a1 = 2.0
     delta = 4.0
-    T = 200.0
-    N = 200
-    M = 2*N
-    L = 20.0
-    dt = 1.e-3
-    dT = 100 * dt
-    dx = L / N
-    n_initials = 1000
     params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
 
-    rng = rd.RandomState(seed=100)
+    # Simulation parameters
+    T = 20.0
+    N = 200
+    L = 20.0
+    dt = 1.e-3
+    dT = 10 * dt
+    dx = L / N
+
+    # Calculate the steady state by timestepping, followed by Newton-Krylov
+    T_psi = 1.0
     x_array = np.linspace(0.0, L, N)
-    u_x_shifts = rng.uniform(4.0, 16.0, size=n_initials)
-    u_x_scale = rng.uniform(0.5, 2, size=n_initials)
-    v_x_shifts = rng.uniform(5.0, 15.0, size=n_initials)
-    v_x_scale = rng.uniform(0.5, 2, size=n_initials)
-    y_shifts = rng.uniform(-2.0, 0.0, size=n_initials)
-    y_scales = rng.uniform(1.0, 4.0, size=n_initials)
-    initial_u_means = []
-    initial_v_means = []
-    store_directory = './../data/singleparameter/'
-    rng = rd.RandomState()
+    u0 = sigmoid(x_array, 6.0, -1, 1.0, 2.0)
+    v0 = sigmoid(x_array, 10, 0.0, 2.0, 0.1)
+    x0 = np.concatenate((u0, v0))
+    u0, v0 = fhn_euler_timestepper(u0, v0, dx, dt, 100.0, params, verbose=False)
+    x0 = np.concatenate((u0, v0))
+    x_ss = calculateSteadyState(x0, T_psi, dx, dt, params)
+    u_ss = x_ss[0:N]
+    v_ss = x_ss[N:]
+    print('Final psi :', lg.norm(psi(x_ss, T_psi, dx, dt, params)))
+    
+    rng = rd.RandomState(seed=100)
+    min_n = 1.0
+    max_n = N // 2
+    n_initials = 1000
     for j in range(n_initials):
         print('initial ', j)
-        u = sigmoid(x_array, u_x_shifts[j], y_shifts[j], u_x_scale[j], y_scales[j])
-        v = sigmoid(x_array, v_x_shifts[j], y_shifts[j], v_x_scale[j], y_scales[j])
-        
-        initial_u_means.append(np.average(u))
-        initial_v_means.append(np.average(v))
+        delta_u = rng.uniform(-1.0, 1.0)
+        delta_v = rng.uniform(-1.0, 1.0)
+        n = rng.randint(min_n, max_n+1)
+        u = u_ss + delta_u * np.cos(2.0 * np.pi * n * x_array / L)
+        v = v_ss + delta_v * np.cos(2.0 * np.pi * n * x_array / L)
         evolution = timeSimulation(u, v, dx, dt, T, dT, params)
 
         # Store the time evolution
-        np.save(store_directory + 'FHN_SingleEpsilon_SigmoidEvolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
-
-    # Make a histogram plot
-    plt.hist(initial_u_means, bins=50, density=True, label=r'Histogram of $<u>$')
-    plt.legend()
-    plt.figure()
-    plt.hist(initial_v_means, bins=50, density=True, label=r'Histogram of $<v>$')
-    plt.legend()
-    plt.show()
+        np.save('./../data/singleparameter/FHN_SingleEpsilon_SinePerturbationEvolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
 
 if __name__ == '__main__':
-    sampleSigmoidInitial()
+    sampleCosinePerturbations()

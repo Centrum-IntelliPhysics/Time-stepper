@@ -45,5 +45,5 @@ def psi(x, T, dx, dt, params):
 
 def calculateSteadyState(x0, T_psi, dx, dt, params):
     F = lambda x: psi(x, T_psi, dx, dt, params)
-    ss = opt.newton_krylov(F, x0)
+    ss = opt.newton_krylov(F, x0, f_tol=1.e-14)
     return ss
