@@ -93,11 +93,12 @@ def sampleCosinePerturbations():
     rng = rd.RandomState(seed=100)
     min_n = 0
     max_n = N // 2
+    max_delta = 0.01
     n_initials = 1000
     for j in range(n_initials):
         print('initial ', j)
-        delta_u = rng.uniform(-1.0, 1.0)
-        delta_v = rng.uniform(-1.0, 1.0)
+        delta_u = max_delta * rng.uniform(-1.0, 1.0)
+        delta_v = max_delta * rng.uniform(-1.0, 1.0)
         n_u = rng.randint(min_n, max_n+1)
         n_v = rng.randint(min_n, max_n+1)
         u = u_ss + delta_u * np.cos(2.0 * np.pi * n_u * x_array / L)

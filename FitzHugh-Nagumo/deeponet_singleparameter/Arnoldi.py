@@ -17,7 +17,7 @@ dt = 0.001
 dT = 10 * dt
 grid_ext = pt.linspace(0.0, 1.0, N)[:,None]
 
-p = 200
+p = 400
 branch_input_size = 400
 trunk_input_size = 1
 branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
