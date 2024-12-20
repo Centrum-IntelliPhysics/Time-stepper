@@ -1,8 +1,6 @@
 import torch as pt
 import numpy as np
 import numpy.linalg as lg
-import numpy.random as rd
-import scipy.optimize as opt
 import scipy.sparse.linalg as slg
 import matplotlib.pyplot as plt
 

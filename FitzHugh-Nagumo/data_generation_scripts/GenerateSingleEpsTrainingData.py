@@ -4,7 +4,6 @@ sys.path.append('../')
 import numpy as np
 import numpy.linalg as lg
 import numpy.random as rd
-import matplotlib.pyplot as plt
 
 from EulerTimestepper import fhn_euler_timestepper, calculateSteadyState, psi
 
