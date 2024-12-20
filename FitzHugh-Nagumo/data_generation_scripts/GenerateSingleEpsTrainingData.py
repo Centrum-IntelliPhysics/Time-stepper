@@ -98,9 +98,10 @@ def sampleCosinePerturbations():
         print('initial ', j)
         delta_u = rng.uniform(-1.0, 1.0)
         delta_v = rng.uniform(-1.0, 1.0)
-        n = rng.randint(min_n, max_n+1)
-        u = u_ss + delta_u * np.cos(2.0 * np.pi * n * x_array / L)
-        v = v_ss + delta_v * np.cos(2.0 * np.pi * n * x_array / L)
+        n_u = rng.randint(min_n, max_n+1)
+        n_v = rng.randint(min_n, max_n+1)
+        u = u_ss + delta_u * np.cos(2.0 * np.pi * n_u * x_array / L)
+        v = v_ss + delta_v * np.cos(2.0 * np.pi * n_v * x_array / L)
         evolution = timeSimulation(u, v, dx, dt, T, dT, params)
 
         # Store the time evolution

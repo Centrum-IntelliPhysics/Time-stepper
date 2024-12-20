@@ -27,7 +27,7 @@ print('Done.')
 
 # Initialize the Network and the Optimizer (Adam)
 print('\nSetting Up DeepONet Neural Net...')
-p = 200
+p = 400
 branch_input_size = 400
 trunk_input_size = 1
 branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
