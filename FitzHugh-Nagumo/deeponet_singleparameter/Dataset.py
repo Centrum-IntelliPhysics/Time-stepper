@@ -8,7 +8,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         super().__init__()
 
         n_initials = 1000
-        n_datarows_per_initial = 2**11
+        n_datarows_per_initial = 2**12
         grid_size = 200
         self.total_data_rows = n_initials * n_datarows_per_initial
 

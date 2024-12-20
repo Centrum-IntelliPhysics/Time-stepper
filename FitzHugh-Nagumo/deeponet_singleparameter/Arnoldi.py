@@ -14,6 +14,7 @@ pt.set_default_dtype(pt.float32)
 N = 200
 L = 20.0
 dt = 0.001
+dT = 10 * dt
 grid_ext = pt.linspace(0.0, 1.0, N)[:,None]
 
 p = 200
@@ -35,10 +36,10 @@ def deeponet(x):
     return pt.concatenate((output[:,0], output[:,1]))
 
 # Calculate the deeponet steady state using Newton-GMRES
-def psi(x0, T_psi, dt):
+def psi(x0, T_psi):
     x = pt.Tensor(x0)
 
-    n = int(T_psi / dt)
+    n = int(T_psi / dT)
     for _ in range(n):
         x = deeponet(x)
     return x0 - x.numpy()
@@ -51,7 +52,7 @@ def calculateEigenvalues():
     print('\nCalculating Leading Eigenvalues of Psi using Arnoldi ...')
     T_psi = 1.0
     r_diff = 1.e-8
-    d_psi_mvp = lambda w: (psi(x0 + r_diff * w, T_psi, dt) - psi(x0, T_psi, dt)) / r_diff
+    d_psi_mvp = lambda w: (psi(x0 + r_diff * w, T_psi) - psi(x0, T_psi)) / r_diff
     D_psi = slg.LinearOperator(shape=(2*N, 2*N), matvec=d_psi_mvp)
     #psi_eigvals = slg.eigs(D_psi, k=2*N-2, which='SM', return_eigenvectors=False)
     print('Done.')
@@ -68,7 +69,7 @@ def calculateEigenvalues():
     # Load eigenvalues of the right-hand side
     euler_eigvals = np.load('./Results/euler_eigenvalues_Tpsi=1p0.npy')
     f_eigvals = euler_eigvals[1,:]
-    #approx_deeponet_eigvals = 1.0 - np.exp(T_psi * f_eigvals)
+    approx_deeponet_eigvals = 1.0 - np.exp(T_psi * f_eigvals)
 
     # Saving
     #toNumericString = lambda number: str(number).replace('.', 'p')
@@ -76,7 +77,7 @@ def calculateEigenvalues():
 
     # Plot the Eigenvalues
     plt.scatter(np.real(psi_eigvals), np.imag(psi_eigvals), label=r'Eigenvalues $\mu$ of $\psi$ ')
-    #plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label=r'$1 - \exp\left(\sigma T\right)$ ')
+    plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label=r'$1 - \exp\left(\sigma T\right)$ ')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')

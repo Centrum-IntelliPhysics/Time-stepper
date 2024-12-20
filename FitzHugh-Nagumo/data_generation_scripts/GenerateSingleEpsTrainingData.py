@@ -70,7 +70,7 @@ def sampleCosinePerturbations():
     params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
 
     # Simulation parameters
-    T = 20.0
+    T = 100.0
     N = 200
     L = 20.0
     dt = 1.e-3
@@ -91,7 +91,7 @@ def sampleCosinePerturbations():
     print('Final psi :', lg.norm(psi(x_ss, T_psi, dx, dt, params)))
     
     rng = rd.RandomState(seed=100)
-    min_n = 1.0
+    min_n = 0
     max_n = N // 2
     n_initials = 1000
     for j in range(n_initials):
