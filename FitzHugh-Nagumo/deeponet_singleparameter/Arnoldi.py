@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from DeepONet import DeepONet
 
 pt.set_grad_enabled(False)
-pt.set_default_dtype(pt.float64)
+pt.set_default_dtype(pt.float32)
 
 N = 200
 L = 20.0
@@ -19,10 +19,10 @@ grid_ext = pt.linspace(0.0, 1.0, N)[:,None]
 p = 200
 branch_input_size = 400
 trunk_input_size = 1
-branch_layers = [branch_input_size, 200, 200, 200, 200, 2*p]
-trunk_layers  = [trunk_input_size,  200, 200, 200, 200, 2*p]
+branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
+trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
-network.load_state_dict(pt.load('./Results/model_deeponet_fhn.pth', weights_only=True))
+network.load_state_dict(pt.load('./Results/model_deeponet_fhn_ss.pth', weights_only=True))
 
 # Wrapper function that takes a general (u, v) input
 L = 20.0
@@ -36,7 +36,7 @@ def deeponet(x):
 
 # Calculate the deeponet steady state using Newton-GMRES
 def psi(x0, T_psi, dt):
-    x = pt.from_numpy(np.copy(x0))
+    x = pt.Tensor(x0)
 
     n = int(T_psi / dt)
     for _ in range(n):
