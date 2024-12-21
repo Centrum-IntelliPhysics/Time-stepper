@@ -24,38 +24,6 @@ def timeSimulation(u0, v0, dx, dt, T, dT, params):
         solution_slices[i+1,:] = np.concatenate((u, v))
     return solution_slices
 
-def sampleNoiseInitial():
-    a0 = -0.03
-    a1 = 2.0
-    delta = 4.0
-    T = 2.0
-    N = 200
-    M = 2*N
-    L = 20.0
-    dt = 1.e-3
-    dx = L / N
-    n_initials = 1000
-
-    # Load the bifurcation diagram to determine a good initial point
-    eps = 0.1
-    load_directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
-    bf_data = np.load(load_directory + 'euler_bf_diagram.npy')
-    x0 = bf_data[0,0:M]
-    u0 = x0[0:N]
-    v0 = x0[N:]
-
-    store_directory = './../data/singleparameter/'
-    rng = rd.RandomState()
-    params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
-    for j in range(n_initials):
-        print('initial ', j)
-        u = u0 + 0.01*rng.normal(0.0, 1.0, N)
-        v = v0 + 0.01*rng.normal(0.0, 1.0, N)
-        evolution = timeSimulation(u, v, dx, dt, T, dt, params)
-
-        # Store the time evolution
-        np.save(store_directory + 'FHN_SingleEpsilon_Evolution_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
-
 def sampleCosinePerturbations():
     # Model parameters
     eps = 0.1
