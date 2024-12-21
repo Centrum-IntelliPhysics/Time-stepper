@@ -33,11 +33,11 @@ def sampleCosinePerturbations():
     params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
 
     # Simulation parameters
-    T = 10.0
+    T = 100.0
     N = 200
     L = 20.0
     dt = 1.e-3
-    dT = 10 * dt
+    dT = 100 * dt
     dx = L / N
 
     # Calculate the steady state by timestepping, followed by Newton-Krylov
@@ -59,7 +59,7 @@ def sampleCosinePerturbations():
     max_delta = 0.1
     n_initials = 1000
     for j in range(n_initials):
-        print('initial ', j)
+        print('Initial #', j+1)
         delta_u = max_delta * rng.uniform(-1.0, 1.0)
         delta_v = max_delta * rng.uniform(-1.0, 1.0)
         n_u = rng.randint(min_n, max_n+1)
@@ -78,7 +78,9 @@ def plotTransients():
         evolution = np.load('./../data/singleparameter/FHN_SingleEpsilon_SinePerturbationEvolution_Initial=' + str(j) + '_eps=0p1_dT=0p001.npy')
         norm_evolution = lg.norm(evolution, axis=1)
         plt.plot(norm_evolution, color='tab:blue')
-
+    plt.xlabel(r'$t$ [s/10]')
+    plt.ylabel('Transient Norms')
+    plt.legend([r'$\sqrt{\|u(t)\|^2 + \|v(t)\|^2}$'])
     plt.show()
 
 if __name__ == '__main__':

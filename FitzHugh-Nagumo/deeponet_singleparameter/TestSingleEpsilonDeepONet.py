@@ -45,7 +45,7 @@ v = pt.Tensor(data[0,200:])
 x_array = L * deeponet_grid
 
 # Find the steady-state of the Euler timestepper
-print('Calculating Euler Steady State ...')
+print('\nCalculating Euler Steady State ...')
 dx = L / N
 dt = 1.e-3
 dT = 10 * dt
@@ -55,7 +55,7 @@ delta = 4.0
 params = {'delta': delta, 'eps': eps, 'a0': a0, 'a1': a1}
 x0 = np.concatenate((u.numpy(), v.numpy()))
 x_ss = calculateSteadyState(x0, 1.0, dx, dt, params)
-print('Euler Psi:', lg.norm(psi(x_ss, 1.0, dx, dt, params)))
+print('Euler Steady-State Found, Final Psi:', lg.norm(psi(x_ss, 1.0, dx, dt, params)))
 
 # Do Timestepping 
 T = 100.0
