@@ -37,8 +37,9 @@ def deeponet(x):
 # Load the Initial Condition
 eps = 0.1
 rng = rd.RandomState()
+initial_index = 474
 data_directory = '../data/singleparameter/'
-file = 'FHN_SingleEpsilon_SinePerturbationEvolution_Initial=0_eps=0p1_dT=0p001.npy'
+file = 'FHN_SingleEpsilon_SinePerturbationEvolution_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
 data = np.load(data_directory + file)
 u = pt.Tensor(data[0,0:200])
 v = pt.Tensor(data[0,200:])
@@ -48,7 +49,7 @@ x_array = L * deeponet_grid
 print('\nCalculating Euler Steady State ...')
 dx = L / N
 dt = 1.e-3
-dT = 10 * dt
+dT = 100 * dt
 a0 = -0.03
 a1 = 2.0
 delta = 4.0
@@ -63,7 +64,7 @@ fig, (ax1, ax2) = plt.subplots(1, 2)
 ax1.plot(x_array, u, label=r'$T=0.0$')
 ax2.plot(x_array, v)
 x = pt.concatenate((u, v))
-for n in range(int(T / dT)+1):
+for n in range(1, int(T / dT)+1):
     if n % 1000 == 0:
         print('t =', n * dT)
     x = deeponet(x)

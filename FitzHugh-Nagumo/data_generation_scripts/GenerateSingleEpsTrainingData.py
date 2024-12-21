@@ -45,7 +45,6 @@ def sampleCosinePerturbations():
     x_array = np.linspace(0.0, L, N)
     u0 = sigmoid(x_array, 6.0, -1, 1.0, 2.0)
     v0 = sigmoid(x_array, 10, 0.0, 2.0, 0.1)
-    x0 = np.concatenate((u0, v0))
     u0, v0 = fhn_euler_timestepper(u0, v0, dx, dt, 100.0, params, verbose=False)
     x0 = np.concatenate((u0, v0))
     x_ss = calculateSteadyState(x0, T_psi, dx, dt, params)
@@ -74,7 +73,6 @@ def sampleCosinePerturbations():
 def plotTransients():
     n_initials = 1000
     for j in range(n_initials):
-        print('initial ', j)
         evolution = np.load('./../data/singleparameter/FHN_SingleEpsilon_SinePerturbationEvolution_Initial=' + str(j) + '_eps=0p1_dT=0p001.npy')
         norm_evolution = lg.norm(evolution, axis=1)
         plt.plot(norm_evolution, color='tab:blue')
