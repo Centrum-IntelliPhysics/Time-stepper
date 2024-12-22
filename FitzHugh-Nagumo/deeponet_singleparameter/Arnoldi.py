@@ -1,8 +1,6 @@
 import torch as pt
 import numpy as np
 import numpy.linalg as lg
-import numpy.random as rd
-import scipy.optimize as opt
 import scipy.sparse.linalg as slg
 import matplotlib.pyplot as plt
 
@@ -14,10 +12,10 @@ pt.set_default_dtype(pt.float32)
 N = 200
 L = 20.0
 dt = 0.001
-dT = 10 * dt
+dT = 100 * dt
 grid_ext = pt.linspace(0.0, 1.0, N)[:,None]
 
-p = 200
+p = 400
 branch_input_size = 400
 trunk_input_size = 1
 branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
@@ -50,7 +48,7 @@ def calculateEigenvalues():
 
     # Calculate the eigenvalues of Psi in steady state
     print('\nCalculating Leading Eigenvalues of Psi using Arnoldi ...')
-    T_psi = 1.0
+    T_psi = 10.0
     r_diff = 1.e-8
     d_psi_mvp = lambda w: (psi(x0 + r_diff * w, T_psi) - psi(x0, T_psi)) / r_diff
     D_psi = slg.LinearOperator(shape=(2*N, 2*N), matvec=d_psi_mvp)
