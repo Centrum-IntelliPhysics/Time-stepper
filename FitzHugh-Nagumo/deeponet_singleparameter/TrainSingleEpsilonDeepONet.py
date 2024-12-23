@@ -30,8 +30,8 @@ print('\nSetting Up DeepONet Neural Net...')
 p = 400
 branch_input_size = 400
 trunk_input_size = 1
-branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
-trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 2*p]
+branch_layers = [branch_input_size, 400, 400, 400, 400, 400, 2*p]
+trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 400, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers).to(device, dtype=dtype)
 optimizer = optim.Adam(network.parameters(), lr=1.e-4)
 step = 100

@@ -82,5 +82,5 @@ def plotTransients():
     plt.show()
 
 if __name__ == '__main__':
-    sampleCosinePerturbations()
+    #sampleCosinePerturbations()
     plotTransients()

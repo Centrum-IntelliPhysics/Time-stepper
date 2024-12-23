@@ -18,8 +18,8 @@ pt.set_default_dtype(pt.float32)
 p = 400
 branch_input_size = 400
 trunk_input_size = 1
-branch_layers = [branch_input_size, 400, 400, 400, 400, 2*p]
-trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 2*p]
+branch_layers = [branch_input_size, 400, 400, 400, 400, 400, 2*p]
+trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 400, 2*p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
 network.load_state_dict(pt.load('./Results/model_deeponet_fhn.pth', weights_only=True))
 pt.save(network.state_dict(), './Results/model_deeponet_fhn_ss.pth')
