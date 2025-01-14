@@ -22,7 +22,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         directory = './../data/singleparameter/'
         for initial_index in range(n_initials):
             print('Reading file', initial_index)
-            file = 'FHN_SingleEpsilon_SinePerturbationEvolution_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
+            file = 'FHN_SingleEpsilon_POD_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
             file_data = pt.from_numpy(np.load(directory + file))
             file_data = file_data.to(dtype=dtype, device=device)
 
