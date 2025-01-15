@@ -1,7 +1,6 @@
 import torch as pt
 import numpy as np
 import numpy.linalg as lg
-import scipy.sparse.linalg as slg
 import matplotlib.pyplot as plt
 
 from DeepONet import DeepONet
@@ -41,65 +40,61 @@ def psi(x0, T_psi):
         x = deeponet(x)
     return x0 - x
 
-
 def calculateEigenvalues():
     # Load the initial condition from file.
-    x0 = np.load('./Results/DeepONet_steadystate.npy')
+    w_ss = pt.tensor(np.load('./Results/DeepONet_steadystate.npy'), dtype=pt.float32)
 
-    # Calculate the eigenvalues of Psi in steady state
-    print('\nCalculating Leading Eigenvalues of Psi using Arnoldi ...')
+    # Calculate psi-value in the steady state
     T_psi = 1.0
-    r_diff = 1.e-8
-    d_psi_mvp = lambda w: (psi(pt.Tensor(x0) + r_diff * w, T_psi) - psi(pt.Tensor(x0), T_psi)) / r_diff
-    #D_psi = slg.LinearOperator(shape=(2*N, 2*N), matvec=d_psi_mvp)
-    #psi_eigvals = slg.eigs(D_psi, k=2*N-2, which='SM', return_eigenvectors=False)
-    print('Done.')
+    input = pt.clone(w_ss).requires_grad_(True)
+    output = psi(input, T_psi)
 
-    # Calculate the eigenvalues using the Francis QR method
-    A = np.zeros((2*N, 2*N))
-    A_exact = np.zeros((2*N, 2*N))
-    I = pt.eye(2*N)
-    for row in range(2*N):
-        print(row)
-        col_vec = I[:,row]
-        psi_row = lambda x: pt.dot(psi(x, T_psi), col_vec)
-        input = pt.Tensor(x0).requires_grad_(True)
+    # Setup the Analytic Jacobian Matrix
+    print('\nComputing the Analytic Jacobian Matrix ...')
+    dF_ad = np.zeros((2*N, 2*N))
+    for n in range(2*N):
+        grad_output = pt.zeros_like(output)
+        grad_output[n] = 1.0  # Select the i-th component
 
-        psi_val = psi_row(input)
-        psi_val_grad = pt.autograd.grad(psi_val, input, retain_graph=True)[0].numpy()
-        A_exact[row,:] = psi_val_grad
+        grad_n = pt.autograd.grad(outputs=output, inputs=input, grad_outputs=grad_output, retain_graph=True)[0]
+        dF_ad[:,n] = grad_n.detach().numpy()
 
-        A[:,row] = d_psi_mvp(col_vec).detach().numpy()
+    # Setup the finite-difference Jacobian Matrix
+    print('\nComputing the Numerical Jacobian Matrix ...')
+    eps_fd = 1.e-8
+    dF_fd = np.zeros((2*N, 2*N))
+    d_psi = lambda v: (psi(w_ss + eps_fd * v, T_psi) - psi(w_ss, T_psi)) / eps_fd
+    for n in range(2*N):
+        e_n = pt.zeros(2*N)
+        e_n[n] = 1.0
+        dF_fd[:,n] = d_psi(e_n).detach().numpy()
 
     print('Running QR Method')
-    psi_eigvals = lg.eigvals(A)
-    psi_exact_eigvals = lg.eigvals(A_exact)
+    eigvals_ad, eigvecs_ad = lg.eig(dF_ad)
+    eigvals_fd, eigvecs_fd = lg.eig(dF_fd)
 
     # Load eigenvalues of the right-hand side
-    euler_eigvals = np.load('./Results/euler_eigenvalues_Tpsi=1p0.npy')
+    euler_eigvals = np.load('./Steady-State/euler_eigenvalues.npy')
     f_eigvals = euler_eigvals[1,:]
     approx_deeponet_eigvals = 1.0 - np.exp(T_psi * f_eigvals)
 
-    # Saving
-    #toNumericString = lambda number: str(number).replace('.', 'p')
-    #np.save(directory + 'euler_eigenvalues_Tpsi='+toNumericString(T_psi)+'.npy', np.vstack((psi_eigvals, f_eigvals, psi_approx_eigvals)))
-
     # Plot the Eigenvalues
-    plt.scatter(np.real(psi_eigvals), np.imag(psi_eigvals), label=r'FD Eigenvalues $\mu$ of $\psi$ ')
-    plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label=r'$1 - \exp\left(\sigma T\right)$ ')
+    plt.scatter(np.real(eigvals_ad), np.imag(eigvals_ad), label='Automatic Differentiation')
+    plt.scatter(np.real(eigvals_fd), np.imag(eigvals_fd), label='Finite Differences')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
-    plt.title(r'Finite Differences DeepONet $\psi$ Eigenvalues')
+    plt.title('DeepONet Eigenvalues')
     plt.legend()
 
+    # Plot the Eigenvalues
     plt.figure()
-    plt.scatter(np.real(psi_exact_eigvals), np.imag(psi_exact_eigvals), label=r'AD Eigenvalues $\mu$ of $\psi$ ')
-    plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label=r'$1 - \exp\left(\sigma T\right)$ ')
+    plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label='PDE')
+    plt.scatter(np.real(eigvals_ad), np.imag(eigvals_ad), label='DeepONet')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
-    plt.title(r'Automatic Differentiation DeepONet $\psi$ Eigenvalues')
+    plt.title('DeepONet vs PDE Eigenvalues')
     plt.legend()
 
     plt.figure()

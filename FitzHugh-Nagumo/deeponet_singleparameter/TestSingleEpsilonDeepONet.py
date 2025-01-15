@@ -39,14 +39,14 @@ eps = 0.1
 rng = rd.RandomState()
 initial_index = 474
 data_directory = '../data/singleparameter/'
-file = 'FHN_SingleEpsilon_SinePerturbationEvolution_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
+file = 'FHN_SingleEpsilon_POD_Initial=' + str(initial_index) + '_eps=0p1_dT=0p001.npy'
 data = np.load(data_directory + file)
 u = pt.Tensor(data[0,0:200])
 v = pt.Tensor(data[0,200:])
 x_array = L * deeponet_grid
 
-# Find the steady-state of the Euler timestepper
-print('\nCalculating Euler Steady State ...')
+# Load of the Euler timestepper
+print('\nLoading the Euler Steady State ...')
 dx = L / N
 dt = 1.e-3
 dT = 100 * dt
@@ -79,7 +79,7 @@ def deeponet_psi(x0, T_psi):
     for _ in range(n):
         x = deeponet(x)
     return x0 - x.numpy()
-x_nn_ss = opt.newton_krylov(lambda x: deeponet_psi(x, 1.0), x_ss)
+x_nn_ss = opt.newton_krylov(lambda x: deeponet_psi(x, 1.0), x0, verbose=True)
 np.save('./Results/DeepONet_steadystate.npy', x_nn_ss)
 
 ax1.plot(x_array, u, label=r'$T ='+str(n*dT)+'$ (DeepONet)')
