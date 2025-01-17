@@ -2,7 +2,7 @@ import torch as pt
 import numpy as np
 import numpy.linalg as lg
 import matplotlib.pyplot as plt
-
+import math
 from DeepONet import DeepONet
 
 pt.set_grad_enabled(True)
@@ -33,14 +33,42 @@ def deeponet(x):
     return pt.concatenate((output[:,0], output[:,1]))
 
 # Calculate the deeponet steady state using Newton-GMRES
-def psi(x0, T_psi):
-    x = pt.clone(x0)
+def psi(x, T_psi):
+    x0 = pt.clone(x)
     n = int(T_psi / dT)
     for _ in range(n):
         x = deeponet(x)
     return x0 - x
 
+def debugFDandAD():
+    # Load the initial condition from file.
+    w_ss = pt.tensor(np.load('./Results/DeepONet_steadystate.npy'), dtype=pt.float32)
+
+    # Calculate psi-value in the steady state
+    T_psi = 1.0
+    input = pt.clone(w_ss).requires_grad_(True)
+    output = psi(input, T_psi)
+    print('psi norm', pt.norm(output))
+
+    eps_fd = 1.e-8
+    d_psi = lambda v: (psi(w_ss + eps_fd * v, T_psi) - output) / eps_fd
+    for n in range(2*N):
+        e_n = pt.eye(2*N)[:,n]
+        print(e_n.shape)
+
+        # AD
+        grad_ad = pt.autograd.grad(outputs=output, inputs=input, grad_outputs=(e_n), retain_graph=True)[0]
+        #print(grad_ad)
+
+        # FD
+        grad_fd = d_psi(e_n)
+
+        print(n, ': ', pt.norm(grad_ad - grad_fd)/pt.norm(grad_ad))
+
 def calculateEigenvalues():
+    f_info = pt.finfo(pt.float32)
+    eps_fd = math.sqrt(f_info.eps)
+
     # Load the initial condition from file.
     w_ss = pt.tensor(np.load('./Results/DeepONet_steadystate.npy'), dtype=pt.float32)
 
@@ -54,16 +82,16 @@ def calculateEigenvalues():
     dF_ad = np.zeros((2*N, 2*N))
     for n in range(2*N):
         grad_output = pt.zeros_like(output)
-        grad_output[n] = 1.0  # Select the i-th component
+        grad_output[n] = 1.0
 
         grad_n = pt.autograd.grad(outputs=output, inputs=input, grad_outputs=grad_output, retain_graph=True)[0]
         dF_ad[:,n] = grad_n.detach().numpy()
 
     # Setup the finite-difference Jacobian Matrix
     print('\nComputing the Numerical Jacobian Matrix ...')
-    eps_fd = 1.e-8
+    print('Sqrt Machine Precision:', eps_fd)
     dF_fd = np.zeros((2*N, 2*N))
-    d_psi = lambda v: (psi(w_ss + eps_fd * v, T_psi) - psi(w_ss, T_psi)) / eps_fd
+    d_psi = lambda v: pt.norm(v) * (psi(w_ss + eps_fd * v / pt.norm(v), T_psi) - psi(w_ss, T_psi)) / eps_fd
     for n in range(2*N):
         e_n = pt.zeros(2*N)
         e_n[n] = 1.0
@@ -79,8 +107,8 @@ def calculateEigenvalues():
     approx_deeponet_eigvals = 1.0 - np.exp(T_psi * f_eigvals)
 
     # Plot the Eigenvalues
-    plt.scatter(np.real(eigvals_ad), np.imag(eigvals_ad), label='Automatic Differentiation')
     plt.scatter(np.real(eigvals_fd), np.imag(eigvals_fd), label='Finite Differences')
+    plt.scatter(np.real(eigvals_ad), np.imag(eigvals_ad), edgecolors='tab:orange', facecolor='none', label='Automatic Differentiation')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
@@ -98,7 +126,7 @@ def calculateEigenvalues():
     plt.legend()
 
     plt.figure()
-    plt.scatter(np.real(f_eigvals), np.imag(f_eigvals), label=r'Eigenvalues $\sigma$ of $f$ ')
+    plt.scatter(np.real(f_eigvals), np.imag(f_eigvals), label=r'Eigenvalues $\sigma$ of $\nabla f$ ')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
