@@ -2,11 +2,9 @@ import sys
 sys.path.append('../')
 
 import numpy as np
-import numpy.linalg as lg
 import numpy.random as rd
-import matplotlib.pyplot as plt
 
-from EulerTimestepper import fhn_euler_timestepper, calculateSteadyState, psi
+from EulerTimestepper import fhn_euler_timestepper
 
 # Original sigmoid between 0 and 1. To make it between -1 and 1, shift by y_center=-0.5 and y_scale=2
 def sigmoid(x, x_center=0.0, y_center=0.0, x_scale=1.0, y_scale=1.0):
