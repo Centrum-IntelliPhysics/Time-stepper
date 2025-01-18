@@ -73,13 +73,13 @@ v = x[200:]
 
 # Calculate the deeponet steady state using Newton-GMRES
 def deeponet_psi(x0, T_psi):
-    x = pt.from_numpy(np.copy(x0))
+    x = pt.tensor(x0)
 
     n = int(T_psi / dT)
     for _ in range(n):
         x = deeponet(x)
     return x0 - x.numpy()
-x_nn_ss = opt.newton_krylov(lambda x: deeponet_psi(x, 1.0), x0, f_tol=1.e-14, verbose=True, method='gmres')
+x_nn_ss = opt.newton_krylov(lambda x: deeponet_psi(x, 1.0), x0, f_tol=1.e-6, verbose=True, method='gmres')
 np.save('./Results/DeepONet_steadystate.npy', x_nn_ss)
 
 ax1.plot(x_array, u, label=r'$T ='+str(n*dT)+'$ (DeepONet)')

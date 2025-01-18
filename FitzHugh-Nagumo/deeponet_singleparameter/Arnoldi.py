@@ -19,8 +19,10 @@ branch_input_size = 400
 trunk_input_size = 1
 branch_layers = [branch_input_size, 400, 400, 400, 400, 400, 2*p]
 trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 400, 2*p]
-network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers)
+network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers, dtype=pt.complex64)
 network.load_state_dict(pt.load('./Results/model_deeponet_fhn_ss.pth', weights_only=True))
+for param in network.parameters():
+    param.data = param.data.to(pt.complex64)
 
 # Wrapper function that takes a general (u, v) input
 L = 20.0
@@ -40,30 +42,51 @@ def psi(x, T_psi):
         x = deeponet(x)
     return x0 - x
 
-def debugFDandAD():
+def debugEigenvalues():
     # Load the initial condition from file.
-    w_ss = pt.tensor(np.load('./Results/DeepONet_steadystate.npy'), dtype=pt.float32)
+    w_ss = pt.tensor(np.load('./Results/DeepONet_steadystate.npy'), dtype=pt.complex64)
 
-    # Calculate psi-value in the steady state
+    # Load the Euler eigenfunctions from file
+    print('\nLoading the Euler Timestepper Eigenvalues')
+    euler_eigvals = np.load('./Steady-State/euler_eigenvalues.npy')[0,:]
+    euler_eigvecs = pt.tensor(np.load('./Steady-State/POD_eigenvectors.npy'), dtype=pt.complex64)
+
+    # Define the Rayleigh Coefficient
     T_psi = 1.0
-    input = pt.clone(w_ss).requires_grad_(True)
-    output = psi(input, T_psi)
-    print('psi norm', pt.norm(output))
+    f_info = pt.finfo(pt.float32)
+    eps_fd = math.sqrt(f_info.eps)
+    d_psi = lambda v: (psi(w_ss + eps_fd * v, T_psi) - psi(w_ss, T_psi)) / eps_fd
+    rayleigh = lambda v: pt.inner(v, d_psi(v)) / pt.inner(v, v)
 
-    eps_fd = 1.e-8
-    d_psi = lambda v: (psi(w_ss + eps_fd * v, T_psi) - output) / eps_fd
+    print('\nComputing the DeepONet Rayleigh Coefficients of the Euler Eigenfunctions')
+    rayleigh_coefs = []
+    for n in range(euler_eigvecs.shape[1]):
+        coef = rayleigh(euler_eigvecs[:,n])
+        rayleigh_coefs.append(coef.detach().numpy())
+        if n < 10:
+            print(coef)
+    rayleigh_coefs = np.array(rayleigh_coefs)
+
+    # Compute the actual DeepONet eigenvalues
+    print('\nComputing the DeepONet Eigenvalues')
+    dF_fd = np.zeros((2*N, 2*N), dtype=np.complex64)
+    d_psi = lambda v: pt.norm(v) * (psi(w_ss + eps_fd * v / pt.norm(v), T_psi) - psi(w_ss, T_psi)) / eps_fd
     for n in range(2*N):
-        e_n = pt.eye(2*N)[:,n]
-        print(e_n.shape)
+        e_n = pt.zeros(2*N, dtype=pt.complex64)
+        e_n[n] = 1.0
+        dF_fd[:,n] = d_psi(e_n).detach().numpy()
+    deeponet_eigs = lg.eigvals(dF_fd)
 
-        # AD
-        grad_ad = pt.autograd.grad(outputs=output, inputs=input, grad_outputs=(e_n), retain_graph=True)[0]
-        #print(grad_ad)
-
-        # FD
-        grad_fd = d_psi(e_n)
-
-        print(n, ': ', pt.norm(grad_ad - grad_fd)/pt.norm(grad_ad))
+    # Plot the (hopefully) leading Rayleigh Coefficients
+    plt.scatter(np.real(euler_eigvals), np.imag(euler_eigvals), edgecolors='tab:orange', facecolor='none', label='Euler Timestepper Eigenvalues')
+    plt.scatter(np.real(rayleigh_coefs), np.imag(rayleigh_coefs), color='tab:blue', label='DeepONet Rayleigh Coefficients')
+    plt.scatter(np.real(deeponet_eigs), np.imag(deeponet_eigs), color='k', marker='x', label='DeepONet Eigenvalues (Arnoldi - FD)')
+    plt.xlabel('Real Part')
+    plt.ylabel('Imaginary Part')
+    plt.grid(visible=True, which='major', axis='both')
+    plt.title('DeepONet versus Euler: Eigenvalues (Only the Real Parts)')
+    plt.legend()
+    plt.show()
 
 def calculateEigenvalues():
     f_info = pt.finfo(pt.float32)
@@ -135,4 +158,4 @@ def calculateEigenvalues():
     plt.show()
 
 if __name__ == '__main__':
-    calculateEigenvalues()
+    debugEigenvalues()

@@ -51,7 +51,7 @@ def sampleEigenPerturbation():
 
     # Perturb the steady state in the direction of the eigenvectors and simulate
     rng = rd.RandomState(seed=100)
-    n_eigenvectors = 20
+    n_eigenvectors = 10
     max_delta = 0.1
     n_initials = 1000
     for j in range(n_initials):
