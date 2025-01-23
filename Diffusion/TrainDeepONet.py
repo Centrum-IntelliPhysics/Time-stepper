@@ -33,12 +33,12 @@ print('Done.')
 # Initialize the Network and the Optimizer (Adam)
 print('\nSetting Up DeepONet Neural Net...')
 p = 400
-branch_input_size = 400
+branch_input_size = 50
 trunk_input_size = 1
-branch_layers = [branch_input_size, 400, 400, 400, p]
-trunk_layers  = [trunk_input_size,  400, 400, 400, p]
+branch_layers = [branch_input_size, 400, 400, 400, 400, p]
+trunk_layers  = [trunk_input_size,  400, 400, 400, 400, p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers).to(device, dtype=dtype)
-optimizer = optim.Adam(network.parameters(), lr=1.e-3)
+optimizer = optim.Adam(network.parameters(), lr=1.e-4)
 step = 100
 scheduler = sch.StepLR(optimizer, step_size=step, gamma=0.1)
 print('Data Size / Number of Parameters:', len(dataset) / (1.0*network.getNumberOfParameters()))

@@ -53,4 +53,4 @@ class DeepONet(nn.Module):
         trunk_output = self.trunk_net.forward(trunk_x)
      
         # Multiply element-wise and sum over axis=1 (p axis)
-        return pt.sum(branch_output * trunk_output, dim=1) 
+        return pt.sum(branch_output * trunk_output, dim=1)[:,None] 
