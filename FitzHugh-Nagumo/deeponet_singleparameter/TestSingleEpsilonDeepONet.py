@@ -61,8 +61,8 @@ print('Euler Steady-State Found, Final Psi:', lg.norm(psi(x_ss, 1.0, dx, dt, par
 # Do Timestepping 
 T = 100.0
 fig, (ax1, ax2) = plt.subplots(1, 2)
-ax1.plot(x_array, u, label=r'$T=0.0$')
-ax2.plot(x_array, v)
+#ax1.plot(x_array, u, label=r'$T=0.0$')
+#ax2.plot(x_array, v)
 x = pt.concatenate((u, v))
 for n in range(1, int(T / dT)+1):
     if n % 1000 == 0:
@@ -82,8 +82,8 @@ def deeponet_psi(x0, T_psi):
 x_nn_ss = opt.newton_krylov(lambda x: deeponet_psi(x, 1.0), x0, f_tol=1.e-6, verbose=True, method='gmres')
 np.save('./Results/DeepONet_steadystate.npy', x_nn_ss)
 
-ax1.plot(x_array, u, label=r'$T ='+str(n*dT)+'$ (DeepONet)')
-ax2.plot(x_array, v)
+#ax1.plot(x_array, u, label=r'$T ='+str(n*dT)+'$ (DeepONet)')
+#ax2.plot(x_array, v)
 ax1.plot(x_array, x_ss[0:200], label='Euler Steady State')
 ax2.plot(x_array, x_ss[200:])
 ax1.plot(x_array, x_nn_ss[0:200], label='DeepONet Steady State')

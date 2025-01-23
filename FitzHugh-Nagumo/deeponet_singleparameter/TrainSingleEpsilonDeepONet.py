@@ -14,7 +14,12 @@ pt.set_grad_enabled(True)
 if pt.backends.mps.is_available():
     device = pt.device("mps")
     dtype = pt.float32
+elif pt.cuda.is_available():
+    print('CUDA Device Available:', pt.cuda.get_device_name(0))
+    device = pt.cuda.device(0)
+    dtype = pt.float32
 else:
+    print('Using CPU because no GPU is available.')
     device = pt.device("cpu")
     dtype = pt.float64
 
