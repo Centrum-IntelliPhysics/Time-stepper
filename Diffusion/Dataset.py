@@ -3,7 +3,7 @@ import numpy as np
 
 from torch.utils.data import Dataset
     
-class SingleEpsilonDeepONetDataset(Dataset):
+class DiffusionDataset(Dataset):
     def __init__(self, device, dtype):
         super().__init__()
 
@@ -22,6 +22,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         directory = './data/'
         for initial_index in range(n_initials):
             print('Reading file', initial_index+1)
+
             file = 'trajectory_' + str(initial_index) + '.npy'
             file_data = pt.from_numpy(np.load(directory + file))
             file_data = file_data.to(dtype=dtype, device=device)
@@ -59,7 +60,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         return self.input_data[idx,:], self.output_data[idx,:]
     
 if __name__ == '__main__':
-    dataset = SingleEpsilonDeepONetDataset(device="cpu", dtype=pt.float64)
+    dataset = DiffusionDataset(device="cpu", dtype=pt.float64)
 
     import time
     time.sleep(120)
