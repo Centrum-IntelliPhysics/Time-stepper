@@ -90,11 +90,14 @@ def calculateEigenvalues():
     plt.legend()
 
     # Plot the Eigenvalues
+    stab_circle = plt.Circle((0.5, 0.0), 0.5, color='k', fill=False, linestyle='-', linewidth=1.0)
     plt.figure()
+    plt.gca().add_patch(stab_circle)
     plt.scatter(np.real(approx_deeponet_eigvals), np.imag(approx_deeponet_eigvals), label='PDE')
     plt.scatter(np.real(eigvals_ad), np.imag(eigvals_ad), edgecolors='tab:orange', facecolor='none', label='DeepONet')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
+    plt.ylim([-0.6, 0.6])
     plt.grid(visible=True, which='major', axis='both')
     plt.title('DeepONet vs PDE Eigenvalues')
     plt.legend()
