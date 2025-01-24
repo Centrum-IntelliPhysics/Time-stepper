@@ -33,8 +33,6 @@ psi_eigenvalues, psi_eigenvectors = lg.eig(J_psi)
 sorted_indices = np.argsort(np.abs(psi_eigenvalues))
 psi_eigenvalues = psi_eigenvalues[sorted_indices]
 psi_eigenvectors = psi_eigenvectors[:,sorted_indices]
-np.save(directory + 'Euler_eigenvalues.npy', psi_eigenvalues)
-np.save(directory + 'Euler_eigenvectors.npy', psi_eigenvectors)
 
 # Also compute the eigenvalues of the right-hand side f(u)
 f_matvec = lambda v: (pde_rhs(u_ss + eps_fd * v, dx, params) - pde_rhs(u_ss, dx, params))/ eps_fd
@@ -47,6 +45,10 @@ for n in range(N):
 # Calculate its eigenvalues and eigenvectors
 f_eigenvalues, f_eigenvectors = lg.eig(J_f)
 approx_psi_eigenvalues = 1.0 - np.exp(T_psi * f_eigenvalues)
+
+np.save(directory + 'Euler_eigenvalues.npy', np.vstack((psi_eigenvalues, f_eigenvalues)))
+np.save(directory + 'Euler_eigenvectors.npy', psi_eigenvectors)
+
 
 # Plot
 plt.scatter(np.real(f_eigenvalues), np.imag(f_eigenvalues))
