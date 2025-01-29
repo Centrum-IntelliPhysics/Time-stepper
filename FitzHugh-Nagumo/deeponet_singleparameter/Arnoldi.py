@@ -75,18 +75,82 @@ def debugEigenvalues():
         e_n = pt.zeros(2*N, dtype=pt.complex64)
         e_n[n] = 1.0
         dF_fd[:,n] = d_psi(e_n).detach().numpy()
-    deeponet_eigs = lg.eigvals(dF_fd)
+    deeponet_eigvals, deeponet_eigvecs = lg.eig(dF_fd)
+
+    # Calculate psi-value in the steady state
+    T_psi = 1.0
+    input = pt.clone(w_ss).requires_grad_(True)
+    output = psi(input, T_psi)
+
+    # Setup the Analytic Jacobian Matrix
+    #print('\nComputing the Analytic Jacobian Matrix ...')
+    #dF_ad = np.zeros((2*N, 2*N))
+    #for n in range(2*N):
+    #    grad_output = pt.zeros_like(output)
+    #    grad_output[n] = 1.0
+    #
+    #    grad_n = pt.autograd.grad(outputs=output, inputs=input, grad_outputs=grad_output, retain_graph=True)[0]
+    #    dF_ad[:,n] = grad_n.detach().numpy()
+    #deeponet_ad_eigvals, deeponet_ad_eigvecs = lg.eig(dF_ad)
 
     # Plot the (hopefully) leading Rayleigh Coefficients
+    circle = plt.Circle((0.5, 0), 0.5, color='k', fill=False)
+    plt.gca().add_patch(circle)
     plt.scatter(np.real(euler_eigvals), np.imag(euler_eigvals), edgecolors='tab:orange', facecolor='none', label='Euler Timestepper Eigenvalues')
-    plt.scatter(np.real(rayleigh_coefs), np.imag(rayleigh_coefs), color='tab:blue', label='DeepONet Rayleigh Coefficients')
-    plt.scatter(np.real(deeponet_eigs), np.imag(deeponet_eigs), color='k', marker='x', label='DeepONet Eigenvalues (Arnoldi - FD)')
+    #plt.scatter(np.real(rayleigh_coefs), np.imag(rayleigh_coefs), color='tab:blue', label='DeepONet Rayleigh Coefficients')
+    plt.scatter(np.real(deeponet_eigvals), np.imag(deeponet_eigvals), color='k', marker='x', label='DeepONet Eigenvalues FD')
+    #plt.scatter(np.real(deeponet_ad_eigvals), np.imag(deeponet_ad_eigvals), color='tab:red', marker='x', label='DeepONet Eigenvalues AD')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
-    plt.title('DeepONet versus Euler: Eigenvalues (Only the Real Parts)')
-    plt.legend()
+    plt.title('DeepONet versus Euler: Eigenvalues')
+    plt.legend(loc='upper left')
+
+    # Plot the first two eigenvectors (Euler and DeepONet)
+    plot_grid = np.linspace(0.0, 1.0, N)
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    ax1.plot(plot_grid, np.real(euler_eigvecs[0:200,0]))
+    ax1.plot(plot_grid,-np.real(deeponet_eigvecs[0:200,0]))
+    #ax1.plot(plot_grid, np.real(deeponet_ad_eigvecs[0:200,0]), label='DeepONet with AD Jacobian')
+    ax2.plot(plot_grid, np.real(euler_eigvecs[200:,0]), label='Euler')
+    ax2.plot(plot_grid,-np.real(deeponet_eigvecs[200:,0]), label='DeepONet with FD Jacobian')
+    #ax2.plot(plot_grid, np.real(deeponet_ad_eigvecs[200:,0]))
+    ax1.set_xlabel(r'$x$')
+    ax2.set_xlabel(r'$x$')
+    ax1.set_title(r'$u(x)$')
+    ax2.set_title(r'$v(x)$')
+    ax2.set_ylim([-0.2, 0.2])
+    ax2.legend()
+    plt.suptitle('Leading Eigenvector')
     plt.show()
+
+# Another Function for Debugging Purposes
+def isLeadingEigenvectorStable():
+    # Get the leading Euler eigenvector. These are the same as the DeepONet ones because the Ryleigh coefficients coincide.
+    euler_eigvecs = pt.tensor(np.load('./Steady-State/POD_eigenvectors.npy'), dtype=pt.complex64)
+    w_ss = pt.tensor(np.load('./Results/DeepONet_steadystate.npy'), dtype=pt.complex64)
+    x = w_ss + euler_eigvecs[:,0]
+
+    # First calculate the Rayleigh coefficient to be sure it's negative
+    T_psi = 1.0
+    f_info = pt.finfo(pt.float32)
+    eps_fd = math.sqrt(f_info.eps)
+    d_psi = lambda v: (psi(w_ss + eps_fd * v, T_psi) - psi(w_ss, T_psi)) / eps_fd
+    rayleigh = lambda v: pt.inner(v, d_psi(v)) / pt.inner(v, v)
+    print('Rayleigh Coefficient of Leading Eigenvector', rayleigh(euler_eigvecs[:,0]))
+
+    # Apply the DeepONet over and over to the steady state + first eigenvector
+    T = 10.0
+    dT = 0.1
+    solution_norms = [pt.norm(x).item()]
+    for n in range(int(T / dT)):
+        x = deeponet(x)
+        solution_norms.append(pt.norm(x).item())
+
+    # Plot the solution norms - is there an explosion (exponential increase)?
+    plt.semilogy(solution_norms)
+    plt.show()
+
 
 def calculateEigenvalues():
     f_info = pt.finfo(pt.float32)
