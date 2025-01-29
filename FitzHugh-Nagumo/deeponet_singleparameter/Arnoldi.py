@@ -77,29 +77,12 @@ def debugEigenvalues():
         dF_fd[:,n] = d_psi(e_n).detach().numpy()
     deeponet_eigvals, deeponet_eigvecs = lg.eig(dF_fd)
 
-    # Calculate psi-value in the steady state
-    T_psi = 1.0
-    input = pt.clone(w_ss).requires_grad_(True)
-    output = psi(input, T_psi)
-
-    # Setup the Analytic Jacobian Matrix
-    #print('\nComputing the Analytic Jacobian Matrix ...')
-    #dF_ad = np.zeros((2*N, 2*N))
-    #for n in range(2*N):
-    #    grad_output = pt.zeros_like(output)
-    #    grad_output[n] = 1.0
-    #
-    #    grad_n = pt.autograd.grad(outputs=output, inputs=input, grad_outputs=grad_output, retain_graph=True)[0]
-    #    dF_ad[:,n] = grad_n.detach().numpy()
-    #deeponet_ad_eigvals, deeponet_ad_eigvecs = lg.eig(dF_ad)
-
     # Plot the (hopefully) leading Rayleigh Coefficients
     circle = plt.Circle((0.5, 0), 0.5, color='k', fill=False)
     plt.gca().add_patch(circle)
     plt.scatter(np.real(euler_eigvals), np.imag(euler_eigvals), edgecolors='tab:orange', facecolor='none', label='Euler Timestepper Eigenvalues')
     #plt.scatter(np.real(rayleigh_coefs), np.imag(rayleigh_coefs), color='tab:blue', label='DeepONet Rayleigh Coefficients')
     plt.scatter(np.real(deeponet_eigvals), np.imag(deeponet_eigvals), color='k', marker='x', label='DeepONet Eigenvalues FD')
-    #plt.scatter(np.real(deeponet_ad_eigvals), np.imag(deeponet_ad_eigvals), color='tab:red', marker='x', label='DeepONet Eigenvalues AD')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
@@ -111,10 +94,8 @@ def debugEigenvalues():
     fig, (ax1, ax2) = plt.subplots(1, 2)
     ax1.plot(plot_grid, np.real(euler_eigvecs[0:200,0]))
     ax1.plot(plot_grid,-np.real(deeponet_eigvecs[0:200,0]))
-    #ax1.plot(plot_grid, np.real(deeponet_ad_eigvecs[0:200,0]), label='DeepONet with AD Jacobian')
     ax2.plot(plot_grid, np.real(euler_eigvecs[200:,0]), label='Euler')
     ax2.plot(plot_grid,-np.real(deeponet_eigvecs[200:,0]), label='DeepONet with FD Jacobian')
-    #ax2.plot(plot_grid, np.real(deeponet_ad_eigvecs[200:,0]))
     ax1.set_xlabel(r'$x$')
     ax2.set_xlabel(r'$x$')
     ax1.set_title(r'$u(x)$')

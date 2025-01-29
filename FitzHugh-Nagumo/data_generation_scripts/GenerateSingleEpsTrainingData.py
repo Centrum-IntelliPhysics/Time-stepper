@@ -6,10 +6,6 @@ import numpy.random as rd
 
 from EulerTimestepper import fhn_euler_timestepper
 
-# Original sigmoid between 0 and 1. To make it between -1 and 1, shift by y_center=-0.5 and y_scale=2
-def sigmoid(x, x_center=0.0, y_center=0.0, x_scale=1.0, y_scale=1.0):
-    return y_scale / (1.0 + np.exp(-(x  - x_center)/x_scale)) + y_center
-
 def timeSimulation(u0, v0, dx, dt, T, dT, params):
     n_timesteps = int(T / dT)
     solution_slices = np.zeros((n_timesteps+1, len(u0) + len(v0)))
@@ -68,7 +64,6 @@ def sampleEigenPerturbation():
 
         # Store the time evolution
         np.save('./../data/singleparameter/FHN_SingleEpsilon_POD_Initial=' + str(j) + '_eps=' + str(eps).replace('.', 'p') + '_dT=' + str(dt).replace('.', 'p') + '.npy', evolution)
-
 
 if __name__ == '__main__':
     sampleEigenPerturbation()
