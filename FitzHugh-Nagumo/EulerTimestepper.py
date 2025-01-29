@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.optimize as opt
+import scipy.sparse.linalg as slg
 
 def fhn_rhs(u, v, dx, params):
     u_left = np.roll(u, -1)
@@ -47,3 +48,14 @@ def calculateSteadyState(x0, T_psi, dx, dt, params):
     F = lambda x: psi(x, T_psi, dx, dt, params)
     ss = opt.newton_krylov(F, x0, f_tol=1.e-14)
     return ss
+
+def calculateLeadingEigenvalues(x_ss, T_psi, dx, dt, params, k=10):
+    M = x_ss.size
+    
+    r_diff = 1.e-8
+    d_psi_mvp = lambda w: T_psi * (psi(x_ss + r_diff * w, T_psi, dx, dt, params) - psi(x_ss, T_psi, dx, dt, params)) / r_diff
+    D_psi = slg.LinearOperator(shape=(M, M), matvec=d_psi_mvp)
+    psi_eigvals, psi_eigvecs = slg.eigs(D_psi, k=k, which='SM', return_eigenvectors=True)
+
+    sorted_indices = np.argsort(psi_eigvals)
+    return psi_eigvals[sorted_indices], psi_eigvecs[:,sorted_indices]
