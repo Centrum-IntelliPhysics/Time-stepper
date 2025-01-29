@@ -46,52 +46,54 @@ def sampleEigenPerturbation():
     bf_data = np.load(load_directory + 'euler_bf_diagram.npy')
     euler_p1 = bf_data[:,0:M]
     euler_eps1 = bf_data[:,M]
-    euler_p2 = bf_data[:,M+1:2*M+1]
-    euler_eps2 = bf_data[:,2*M+1]
-    print('Left side is ordered:', np.all(np.diff(euler_eps2) <= 0))
-    plt.plot(euler_eps2)
-    plt.show()
+    euler_p2 = np.flip(bf_data[:,M+1:2*M+1])
+    euler_eps2 = np.flip(bf_data[:,2*M+1], axis=0)
+    euler_eps = np.concatenate((euler_eps2, euler_eps1))
+    euler_path = np.vstack((euler_p2, euler_p1))
 
     # Determine the epsilon values to sample. Uses the fact that the arrays are monotonous
     def find_nearest(array, value, start_index):
         index = start_index
-        c_value = array[index]
+        c_value = array[start_index]
         while index < len(array):
             if np.abs(array[index] - value) > np.abs(c_value - value):
                 return index
+            else:
+                c_value = array[index]
+            index += 1
         return None
     eps_values = [-0.02, -0.015, -0.01, -0.005, 0.0, 0.005, 0.01, 0.015, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.94, 0.9, 0.8, 0.7]
-    running_index = 0
 
     # Run through the epsilon values, find the point on the bf diagram nearest to it, compute its POD, perturb, and evolve.
     rng = rd.RandomState(seed=100)
-    current_eps_array = euler_eps2
-    current_bf_array = euler_p2
+    running_index = 0
     for eps_index in range(len(eps_values)):
         eps = eps_values[eps_index]
-        print('Eps =', eps)
+        print('\nEps =', eps)
 
         # 1. Get the closest poin on the bifurcation diagram
-        running_index = find_nearest(current_eps_array, eps, running_index)
-        if running_index is None:
-            current_eps_array = euler_eps1
-            current_bf_array = euler_p1
-            running_index = find_nearest(current_eps_array, eps, 0)
-        u0 = current_bf_array[running_index, :N]
-        v0 = current_bf_array[running_index, N:]
+        print('Getting point on the bifurcation diagram')
+        running_index = find_nearest(euler_eps, eps, running_index)
+        _eps = euler_eps[running_index]
+        u0 = euler_path[running_index, :N]
+        v0 = euler_path[running_index, N:]
         x0 = np.concatenate((u0, v0))
+        print('Closes point on the BF diagram:', eps, _eps)
 
         # 2. Compute the complete Jacobian and do POD
+        print('Computing POD')
+        params['eps'] = _eps
         T_psi = 1.0
         _, eigvecs = calculateLeadingEigenvalues(x0, T_psi, dx, dt, params, k=10)
 
         # 3. Perturb the initial condition 1000 times
         for initial in range(n_initials):
+            print('Evolving Initial #:', initial)
             eig_index = rng.randint(0, 10)
             delta_u = rng.uniform(-0.1, 0.1)
             delta_v = rng.uniform(-0.1, 0.1)
-            u = u0 + delta_u * eigvecs[:N, eig_index]
-            v = u0 + delta_v * eigvecs[:N, eig_index]
+            u = u0 + delta_u * np.real(eigvecs[:N, eig_index])
+            v = u0 + delta_v * np.real(eigvecs[:N, eig_index])
 
             # 4. Evolve the perturbed initial condition
             evolution = timeSimulation(u, v, dx, dt, T, dt, params)
