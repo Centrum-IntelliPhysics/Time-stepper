@@ -25,7 +25,7 @@ else:
 
 # Load the data in memory
 print('Loading Training Data ...')
-dataset = MultipleEpsilonDeepONetDataset(device, dtype, from_file=False)
+dataset = MultipleEpsilonDeepONetDataset(device, dtype, from_file=True)
 batch_size = 128
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 print('Done.')
