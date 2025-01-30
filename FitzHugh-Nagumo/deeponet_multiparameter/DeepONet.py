@@ -7,7 +7,6 @@ from collections import OrderedDict
 class DenseNN(nn.Module):
     def __init__(self, layers=[], dtype=pt.float32):
         super(DenseNN, self).__init__()
-        print('dtype', dtype)
         
         # Create all feed-forward layers
         self.depth = len(layers) - 1

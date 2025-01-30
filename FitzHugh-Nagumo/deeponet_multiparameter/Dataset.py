@@ -18,7 +18,8 @@ class MultipleEpsilonDeepONetDataset(Dataset):
 
             return
 
-        eps_values = self.loadEpsValues(directory)
+        eps_values = self.loadEpsValues(directory)[0:19]
+        print(eps_values)
         n_eps = len(eps_values)
         n_initials_per_eps = 200
         n_datarows_per_initial = 2**10

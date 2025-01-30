@@ -15,7 +15,7 @@ pt.set_grad_enabled(False)
 pt.set_default_dtype(pt.float32)
 
 # Load the model from file
-print('\Loading Up DeepONet Neural Net...')
+print('\nLoading Up DeepONet Neural Net...')
 p = 400
 branch_input_size = 400
 trunk_input_size = 1
@@ -29,8 +29,8 @@ L = 20.0
 N = 200
 deeponet_grid = pt.linspace(0.0, 1.0, N)
 deeponet_grid_ext = deeponet_grid[:,None]
-def deeponet(x, eps):
-    input = pt.concatenate((eps * pt.ones_like(deeponet_grid_ext), pt.tile(x, dims=(N,1)), deeponet_grid_ext), dim=1)
+def deeponet(x, _eps):
+    input = pt.concatenate((_eps * pt.ones_like(deeponet_grid_ext), pt.tile(x, dims=(N,1)), deeponet_grid_ext), dim=1)
     output = network.forward(input)
     return pt.concatenate((output[:,0], output[:,1]))
 
@@ -38,7 +38,7 @@ def deeponet(x, eps):
 eps = 0.1
 rng = rd.RandomState()
 initial_index = 474
-data_directory = '../data/singleparameter/'
+data_directory = '../data/multiparameter/'
 file = 'FHN_MultiEps_Evolution_Initial=' + str(initial_index) + '_eps=' + str(eps).replace('.', 'p') + '.npy'
 data = np.load(data_directory + file)
 u = pt.Tensor(data[0,0:200])
@@ -61,13 +61,13 @@ print('Euler Steady-State Found, Final Psi:', lg.norm(psi(x_ss, 1.0, dx, dt, par
 # Do Timestepping 
 T = 100.0
 fig, (ax1, ax2) = plt.subplots(1, 2)
-#ax1.plot(x_array, u, label=r'$T=0.0$')
-#ax2.plot(x_array, v)
+ax1.plot(x_array, u, label=r'$T=0.0$')
+ax2.plot(x_array, v)
 x = pt.concatenate((u, v))
 for n in range(1, int(T / dT)+1):
     if n % 1000 == 0:
         print('t =', n * dT)
-    x = deeponet(x)
+    x = deeponet(x, eps)
 u = x[0:200]
 v = x[200:]
 
@@ -77,13 +77,13 @@ def deeponet_psi(x0, T_psi):
 
     n = int(T_psi / dT)
     for _ in range(n):
-        x = deeponet(x)
+        x = deeponet(x, eps)
     return x0 - x.numpy()
 x_nn_ss = opt.newton_krylov(lambda x: deeponet_psi(x, 1.0), x0, f_tol=1.e-6, verbose=True, method='gmres')
 np.save('./Results/DeepONet_steadystate.npy', x_nn_ss)
 
-#ax1.plot(x_array, u, label=r'$T ='+str(n*dT)+'$ (DeepONet)')
-#ax2.plot(x_array, v)
+ax1.plot(x_array, u, label=r'$T ='+str(n*dT)+'$ (DeepONet)')
+ax2.plot(x_array, v)
 ax1.plot(x_array, x_ss[0:200], label='Euler Steady State')
 ax2.plot(x_array, x_ss[200:])
 ax1.plot(x_array, x_nn_ss[0:200], label='DeepONet Steady State')
