@@ -3,7 +3,7 @@ import numpy as np
 
 from torch.utils.data import Dataset
     
-class SingleEpsilonDeepONetDataset(Dataset):
+class MultipleEpsilonDeepONetDataset(Dataset):
     def __init__(self, device, dtype, from_file=False):
         super().__init__()
 
@@ -79,7 +79,7 @@ class SingleEpsilonDeepONetDataset(Dataset):
         return self.input_data[idx,:], self.output_data[idx,:]
     
 if __name__ == '__main__':
-    dataset = SingleEpsilonDeepONetDataset(device="cpu", dtype=pt.float32)
+    dataset = MultipleEpsilonDeepONetDataset(device="cpu", dtype=pt.float32)
 
     import time
     time.sleep(120)
