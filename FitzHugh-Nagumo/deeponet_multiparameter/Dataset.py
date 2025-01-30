@@ -1,5 +1,6 @@
 import torch as pt
 import numpy as np
+import os
 
 from torch.utils.data import Dataset
     
@@ -17,17 +18,16 @@ class MultipleEpsilonDeepONetDataset(Dataset):
 
             return
 
-        eps_values = [-0.02, -0.015, -0.01, -0.005, 0.0, 0.005, 0.01, 0.015, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.94, 0.9, 0.8, 0.7]
+        eps_values = self.loadEpsValues(directory)
         n_eps = len(eps_values)
         n_initials_per_eps = 200
-        n_datarows_per_initial = 2**11
+        n_datarows_per_initial = 2**10
         grid_size = 200
-        self.total_data_rows = n_initials_per_eps * n_datarows_per_initial
+        self.total_data_rows = n_eps * n_initials_per_eps * n_datarows_per_initial
 
         grid = pt.linspace(0.0, 1.0, grid_size, device=device, dtype=dtype)
         self.input_data = pt.zeros((self.total_data_rows, 1 + 2 * grid_size + 1), requires_grad=False, device=device, dtype=dtype) # (eps, u(t), v(t), x_i)
         self.output_data = pt.zeros((self.total_data_rows, 2), requires_grad=False, device=device, dtype=dtype) # (u(x_i, t+1), v(x_i, t+1))
-        
         data_index = 0
 
         # Load all data in the file
@@ -71,6 +71,19 @@ class MultipleEpsilonDeepONetDataset(Dataset):
 
         np.save(directory + 'inputs.npy', self.input_data.cpu().numpy())
         np.save(directory + 'outputs.npy', self.output_data.cpu().numpy())
+
+    def loadEpsValues(self, directory):
+            eps_values = []
+            file_names = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+            for file in file_names:
+                if not file.startswith('FHN_MultiEps_Evolution_Initial='):
+                    continue
+                eps_index = file.find('eps=')
+                end_index = file.find('.npy')
+                eps_values.append(float(file[eps_index+4:end_index].replace('p', '.')))
+            eps_values = list(set(eps_values))
+            eps_values.sort()
+            return eps_values
    
     def __len__(self):
         return self.total_data_rows
@@ -79,7 +92,7 @@ class MultipleEpsilonDeepONetDataset(Dataset):
         return self.input_data[idx,:], self.output_data[idx,:]
     
 if __name__ == '__main__':
-    dataset = MultipleEpsilonDeepONetDataset(device="cpu", dtype=pt.float32)
+    dataset = MultipleEpsilonDeepONetDataset(device="cpu", dtype=pt.float32, from_file=False)
 
     import time
     time.sleep(120)
