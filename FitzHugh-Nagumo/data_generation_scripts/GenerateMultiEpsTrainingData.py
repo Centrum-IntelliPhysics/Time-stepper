@@ -38,7 +38,7 @@ def sampleEigenPerturbation():
     T = 10.0
     dt = 1.e-3
     dT = 0.1
-    n_initials = 1000
+    n_initials = 200
     
     # Load the bifurcation diagram
     load_directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
@@ -93,10 +93,10 @@ def sampleEigenPerturbation():
             delta_u = rng.uniform(-0.1, 0.1)
             delta_v = rng.uniform(-0.1, 0.1)
             u = u0 + delta_u * np.real(eigvecs[:N, eig_index])
-            v = u0 + delta_v * np.real(eigvecs[:N, eig_index])
+            v = v0 + delta_v * np.real(eigvecs[:N, eig_index])
 
             # 4. Evolve the perturbed initial condition
-            evolution = timeSimulation(u, v, dx, dt, T, dt, params)
+            evolution = timeSimulation(u, v, dx, dt, T, dT, params)
 
             # 5. Store to file
             np.save(store_directory + 'FHN_MultiEps_Evolution_Initial=' + str(initial) + '_eps=' + str(eps).replace('.', 'p') + '.npy', evolution)
