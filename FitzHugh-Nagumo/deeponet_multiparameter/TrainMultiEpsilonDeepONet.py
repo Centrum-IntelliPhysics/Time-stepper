@@ -40,7 +40,7 @@ branch_layers = [branch_input_size, 400, 400, 400, 400, 400, 2*p]
 trunk_layers  = [trunk_input_size,  400, 400, 400, 400, 400, 2*p]
 network = DeepONet(eps_branch_layers=eps_layers, branch_layers=branch_layers, trunk_layers=trunk_layers).to(device, dtype=dtype)
 optimizer = optim.Adam(network.parameters(), lr=1.e-4)
-step = 2
+step = 20
 scheduler = sch.StepLR(optimizer, step_size=step, gamma=0.1)
 print('Data Size / Number of Parameters:', len(dataset) / (1.0*network.getNumberOfParameters()))
 

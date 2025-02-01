@@ -10,8 +10,8 @@ class MultipleEpsilonDeepONetDataset(Dataset):
 
         directory = './../data/multiparameter/'
         if from_file:
-            self.input_data = pt.Tensor(np.load(directory + 'inputs.npy'), dtype=dtype, device=device)
-            self.output_data = pt.Tensor(np.load(directory + 'outputs.npy'), dtype=dtype, device=device)
+            self.input_data = pt.Tensor(np.load(directory + 'inputs.npy')).to(dtype=dtype, device=device)
+            self.output_data = pt.Tensor(np.load(directory + 'outputs.npy')).to(dtype=dtype, device=device)
             self.input_data.requires_grad = False
             self.output_data.requires_grad = False
             self.total_data_rows = self.input_data.shape[0]
