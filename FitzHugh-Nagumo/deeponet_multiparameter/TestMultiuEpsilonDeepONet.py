@@ -37,7 +37,7 @@ def deeponet(x, _eps):
 # Load the Initial Condition
 eps = 0.1
 rng = rd.RandomState()
-initial_index = 474
+initial_index = 131
 data_directory = '../data/multiparameter/'
 file = 'FHN_MultiEps_Evolution_Initial=' + str(initial_index) + '_eps=' + str(eps).replace('.', 'p') + '.npy'
 data = np.load(data_directory + file)

@@ -35,7 +35,7 @@ def sampleEigenPerturbation():
     dx = L / N
 
     # Timestepping parameters
-    T = 10.0
+    T = 20.0
     dt = 1.e-3
     dT = 0.1
     n_initials = 200
@@ -62,7 +62,7 @@ def sampleEigenPerturbation():
                 c_value = array[index]
             index += 1
         return None
-    eps_values = [-0.02, -0.015, -0.01, -0.005, 0.0, 0.005, 0.01, 0.015, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.94, 0.9, 0.8, 0.7]
+    eps_values = [-0.02, -0.015, -0.01, -0.005, 0.0, 0.005, 0.01, 0.015, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
     # Run through the epsilon values, find the point on the bf diagram nearest to it, compute its POD, perturb, and evolve.
     rng = rd.RandomState(seed=100)
@@ -93,7 +93,7 @@ def sampleEigenPerturbation():
             delta_u = rng.uniform(-0.1, 0.1)
             delta_v = rng.uniform(-0.1, 0.1)
             u = u0 + delta_u * np.real(eigvecs[:N, eig_index])
-            v = v0 + delta_v * np.real(eigvecs[:N, eig_index])
+            v = v0 + delta_v * np.real(eigvecs[N:, eig_index])
 
             # 4. Evolve the perturbed initial condition
             evolution = timeSimulation(u, v, dx, dt, T, dT, params)

@@ -18,7 +18,7 @@ class MultipleEpsilonDeepONetDataset(Dataset):
 
             return
 
-        eps_values = self.loadEpsValues(directory)[0:19]
+        eps_values = self.loadEpsValues(directory)
         print(eps_values)
         n_eps = len(eps_values)
         n_initials_per_eps = 200
@@ -30,6 +30,7 @@ class MultipleEpsilonDeepONetDataset(Dataset):
         self.input_data = pt.zeros((self.total_data_rows, 1 + 2 * grid_size + 1), requires_grad=False, device=device, dtype=dtype) # (eps, u(t), v(t), x_i)
         self.output_data = pt.zeros((self.total_data_rows, 2), requires_grad=False, device=device, dtype=dtype) # (u(x_i, t+1), v(x_i, t+1))
         data_index = 0
+        print('Total Data Memory Consumption:', (self.input_data.nelement() * self.input_data.element_size() + self.output_data.nelement() * self.output_data.element_size()) / 1024.0**2, 'MB')
 
         # Load all data in the file
         for eps_index in range(n_eps):
