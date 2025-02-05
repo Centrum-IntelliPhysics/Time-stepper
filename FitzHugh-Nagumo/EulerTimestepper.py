@@ -49,6 +49,7 @@ def calculateSteadyState(x0, T_psi, dx, dt, params):
     ss = opt.newton_krylov(F, x0, f_tol=1.e-14)
     return ss
 
+
 def calculateLeadingEigenvalues(x_ss, T_psi, dx, dt, params, k=10):
     M = x_ss.size
     

@@ -35,7 +35,7 @@ def sampleEigenPerturbation():
     dx = L / N
 
     # Timestepping parameters
-    T = 20.0
+    T = 100.0
     dt = 1.e-3
     dT = 0.1
     n_initials = 200
@@ -97,6 +97,7 @@ def sampleEigenPerturbation():
 
             # 4. Evolve the perturbed initial condition
             evolution = timeSimulation(u, v, dx, dt, T, dT, params)
+            evolution = evolution[10:,:]
 
             # 5. Store to file
             np.save(store_directory + 'FHN_MultiEps_Evolution_Initial=' + str(initial) + '_eps=' + str(eps).replace('.', 'p') + '.npy', evolution)
