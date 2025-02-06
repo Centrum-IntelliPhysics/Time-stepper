@@ -107,7 +107,7 @@ def calculateBifurcationDiagram():
 
     # Continuation Parameters
     tolerance = 1.e-8
-    max_steps = 1000
+    max_steps = 150
     ds_min = 1.e-6
     ds_max = 0.001
     ds = 0.001
@@ -125,22 +125,22 @@ def calculateBifurcationDiagram():
     else:
         sign = -1.0
     x1_path, lam1_path = numericalContinuation(u0, lam0,  sign * initial_tangent, max_steps, ds, ds_min, ds_max, tolerance)
-    x2_path, lam2_path = numericalContinuation(u0, lam0, -sign * initial_tangent, max_steps, ds, ds_min, ds_max, tolerance)
+    #x2_path, lam2_path = numericalContinuation(u0, lam0, -sign * initial_tangent, max_steps, ds, ds_min, ds_max, tolerance)
 
     # Store the full path
     x1_path = np.array(x1_path)
-    x2_path = np.array(x2_path)
+    #x2_path = np.array(x2_path)
     lam1_path = np.array(lam1_path)
-    lam2_path = np.array(lam2_path)
-    np.save(directory + 'euler_bf_diagram.npy', np.hstack((x1_path, lam1_path[:,np.newaxis], x2_path, lam2_path[:,np.newaxis])))
+    #lam2_path = np.array(lam2_path)
+    #np.save(directory + 'euler_bf_diagram.npy', np.hstack((x1_path, lam1_path[:,np.newaxis], x2_path, lam2_path[:,np.newaxis])))
 
     # Plot both branches
     plot_x1_path = np.max(np.abs(x1_path[:, 0:N]), axis=1)
-    plot_x2_path = np.max(np.abs(x2_path[:, 0:N]), axis=1)
+    #plot_x2_path = np.max(np.abs(x2_path[:, 0:N]), axis=1)
     plt.plot(lam1_path, plot_x1_path, color='blue')
-    plt.plot(lam2_path, plot_x2_path, color='blue')
+    #plt.plot(lam2_path, plot_x2_path, color='blue')
     plt.xlabel(r'$\lambda$')
-    plt.ylabel(r'$<u>$')
+    plt.ylabel(r'$|u|_{\infty}$')
     plt.show()
 
 
