@@ -10,7 +10,7 @@ def testEulerTimestepper():
     params = {'lambda': lam}
 
     # Geometry Parameters
-    N = 25
+    N = 50
     x_array = np.linspace(0.0, 1.0, N)
     dx = 1.0 / N
     u0 = 0.0 * x_array
