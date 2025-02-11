@@ -7,12 +7,11 @@ import matplotlib.pyplot as plt
 
 from EulerTimestepper import psi, calculateSteadyState
 
-N = 50
+N = 51
 x_array = np.linspace(0.0, 1.0, N)
-dx = 1.0 / N
-dt = 0.001
+dx = 1.0 / (N-1)
 dt = 1.e-4
-T_psi = 1.0
+T_psi = 1.e-1
 params = {}
 rdiff = 1.e-8
 directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
@@ -51,10 +50,13 @@ def numericalContinuation(x0, lam0, initial_tangent, max_steps, ds, ds_min, ds_m
 
     x_path = [np.copy(x)]
     lam_path = [lam]
-    print_str = 'Step {0:3d}:\t |u|_inf: {1:4f}\t lambda: {2:4f}\t ds: {3:6f}'.format(0, np.max(np.abs(x_path[0][0:N])), lam, ds)
-    print(print_str)
+    print('Step {0:3d}:\t |u|_inf: {1:4f}\t lambda: {2:4f}\t ds: {3:6f}'.format(0, lg.norm(x_path[0], ord=np.inf), lam, ds))
 
     for n in range(1, max_steps+1):
+        if lam < 0.1:
+            print('Artificial end point reached, quiting this branch.')
+            break
+
 		# Calculate the tangent to the curve at current point 
         Gx_v = lambda v: dGdx_v(x, v, lam)
         Glam = dGdlam(x, lam)
@@ -91,14 +93,13 @@ def numericalContinuation(x0, lam0, initial_tangent, max_steps, ds, ds_min, ds_m
             print('Minimal Arclength Size is too large. Aborting.')
             return x_path, lam_path
 		
-        print_str = 'Step {0:3d}:\t |u|_inf: {1:4f}\t lambda: {2:4f}\t ds: {3:6f}'.format(n, np.max(np.abs(x_path[-1][0:N])), lam, ds)
-        print(print_str)
+        print('Step {0:3d}:\t |u|_inf: {1:4f}\t lambda: {2:4f}\t ds: {3:6f}'.format(n, lg.norm(x_path[-1], ord=np.inf), lam, ds))
 
     return x_path, lam_path
 
 """
 Routine that calculates the bifurcation diagram of a timestepper for the Fitzhugh-Nagumo PDE. Steady states of 
-the pde equal fixex points of the timespper, or zeros of psi(x) = (x - s_T(x)) / T, with s_T the timestepper.
+the pde equal fixex points of the timespper, or zeros of psi(x) = x - s_T(x), with s_T the timestepper.
 """
 def calculateBifurcationDiagram():
     lam0 = 1.0
@@ -106,11 +107,11 @@ def calculateBifurcationDiagram():
     u0 = calculateSteadyState(0.0*x_array, T_psi, dx, dt, params)
 
     # Continuation Parameters
-    tolerance = 1.e-8
-    max_steps = 150
+    tolerance = 1.e-10
+    max_steps = 10000
     ds_min = 1.e-6
     ds_max = 0.001
-    ds = 0.001
+    ds = ds_max
 
     # Calculate the tangent to the path at the initial condition x0
     rng = rd.RandomState()
@@ -119,26 +120,23 @@ def calculateBifurcationDiagram():
     initial_tangent = initial_tangent / lg.norm(initial_tangent)
 
     # Do actual numerical continuation in both directions
-    if initial_tangent[-1] < 0.0: # Decreasing lam
-        print('Increasing lam first')
-        sign = 1.0
-    else:
-        sign = -1.0
-    x1_path, lam1_path = numericalContinuation(u0, lam0,  sign * initial_tangent, max_steps, ds, ds_min, ds_max, tolerance)
-    #x2_path, lam2_path = numericalContinuation(u0, lam0, -sign * initial_tangent, max_steps, ds, ds_min, ds_max, tolerance)
+    print(initial_tangent[-1])
+    x1_path, lam1_path = numericalContinuation(u0, lam0,  initial_tangent, max_steps, ds, ds_min, ds_max, tolerance)
+    x2_path, lam2_path = numericalContinuation(u0, lam0, -initial_tangent, max_steps, ds, ds_min, ds_max, tolerance)
 
     # Store the full path
     x1_path = np.array(x1_path)
-    #x2_path = np.array(x2_path)
+    x2_path = np.array(x2_path)
     lam1_path = np.array(lam1_path)
-    #lam2_path = np.array(lam2_path)
-    #np.save(directory + 'euler_bf_diagram.npy', np.hstack((x1_path, lam1_path[:,np.newaxis], x2_path, lam2_path[:,np.newaxis])))
+    lam2_path = np.array(lam2_path)
+    np.save(directory + 'euler_bf_diagram_branch1.npy', np.hstack((x1_path, lam1_path[:,np.newaxis])))
+    np.save(directory + 'euler_bf_diagram_branch2.npy', np.hstack((x2_path, lam2_path[:,np.newaxis])))
 
     # Plot both branches
     plot_x1_path = np.max(np.abs(x1_path[:, 0:N]), axis=1)
-    #plot_x2_path = np.max(np.abs(x2_path[:, 0:N]), axis=1)
+    plot_x2_path = np.max(np.abs(x2_path[:, 0:N]), axis=1)
     plt.plot(lam1_path, plot_x1_path, color='blue')
-    #plt.plot(lam2_path, plot_x2_path, color='blue')
+    plt.plot(lam2_path, plot_x2_path, color='blue')
     plt.xlabel(r'$\lambda$')
     plt.ylabel(r'$|u|_{\infty}$')
     plt.show()

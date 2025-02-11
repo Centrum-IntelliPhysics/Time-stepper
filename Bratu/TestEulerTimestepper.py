@@ -6,13 +6,13 @@ from EulerTimestepper import timestepper, psi, calculateSteadyState, calculateRH
 
 def testEulerTimestepper():
     # Model Parameters
-    lam = 1.0
+    lam = 3.4
     params = {'lambda': lam}
 
     # Geometry Parameters
-    N = 50
+    N = 51
     x_array = np.linspace(0.0, 1.0, N)
-    dx = 1.0 / N
+    dx = 1.0 / (N-1)
     u0 = 0.0 * x_array
 
     # Time-stepping parameters
