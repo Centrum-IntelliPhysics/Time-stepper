@@ -71,14 +71,35 @@ def patchOneTimestep(u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_d
 
     return return_u
 
-def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params):
+def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params, verbose=False):
     n_teeth = len(x_plot_array)
     n_patch_steps = int(T / T_patch)
     for k in range(n_patch_steps):
-        if k % 1000 == 0:
+        if verbose and k % 1000 == 0:
             print('t =', round(k*T_patch, 4))
         u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
     return u_sol
+
+def toPatch(x_plot_array, u0):
+    length = len(x_plot_array[0])
+    u_sol = []
+    for i in range(len(x_plot_array)):
+        u_sol.append(u0[i * length:(i+1)*length])
+    return u_sol
+
+def toNumpyArray(u_sol):
+    length = u_sol[0].size
+    u_new = np.zeros(len(u_sol) * length)
+    for i in range(len(u_sol)):
+        u_new[i * length:(i+1)*length] = u_sol[i]
+    return u_new
+
+# Input u0 is a numpy array
+def psiPatch(x_plot_array, u0, dx, dt, T_patch, T, params):
+    u_sol = toPatch(x_plot_array, u0)
+    u_new = patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params)
+
+    return u0 - toNumpyArray(u_new)
 
 def gapToothEvolution():
     RBF.RBFInterpolator.lu_exists = False
@@ -91,7 +112,6 @@ def gapToothEvolution():
     n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
     N = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
     dx = 1.0 / (N - 1)
-    print('N =', N, 'dx =', dx)
 
     # Model parameters
     lam = 1.0
@@ -105,12 +125,17 @@ def gapToothEvolution():
     for i in range(n_teeth):
         u_sol.append(u0[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
         x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
-
+    
     # Time-stepping
     dt = 1.e-5
     T = 100.0
     T_patch = 10 * dt
-    u_sol = patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params)
+    u_sol = patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params, verbose=True)
+
+    # Store the solution to file
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    filename = 'Evolution_Steady_State_lambda=' + str(lam) + '.npy'
+    np.save(directory + filename, u_sol)
 
     # Plot the solution of each tooth
     plt.plot(x_plot_array[0], u_sol[0], label=r'$u(x, t=$' + str(T) + r'$)$', color='blue')
@@ -120,6 +145,85 @@ def gapToothEvolution():
     plt.legend()
     plt.show()
 
+def calculateSteadyState():
+    RBF.RBFInterpolator.lu_exists = False
+
+    # Domain parameters
+    n_teeth = 10
+    n_gaps = n_teeth - 1
+    gap_over_tooth_size_ratio = 1
+    n_points_per_tooth = 11
+    n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
+    N = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
+    dx = 1.0 / (N - 1)
+
+    # Model parameters
+    lam = 1.0
+    params = {'lambda': lam}
+
+    # Initial condition - Convert it to the Gap-Tooth datastructure
+    x_array = np.linspace(0.0, 1.0, N)
+    x_plot_array = []
+    u0 = 0.0 * x_array
+    u_patch = []
+    for i in range(n_teeth):
+        u_patch.append(u0[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+        x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+    u0 = toNumpyArray(u_patch)
+
+    # Newton-GMRES
+    dt = 1.e-5
+    T_patch = 10 * dt
+    T_psi = 1.0
+    F = lambda u: psiPatch(x_plot_array, u, dx, dt, T_patch, T_psi, params)
+    u_ss = opt.newton_krylov(F, u0, verbose=True)
+
+    # Store the solution to file
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    filename = 'Newton-GMRES_Steady_State_lambda=' + str(lam) + '.npy'
+    np.save(directory + filename, u_ss)
+
+    # Plot the solution of each tooth
+    u_ss = toPatch(x_plot_array, u_ss)
+    plt.plot(x_plot_array[0], u_ss[0], label='Newton-GMRES', color='blue')
+    for i in range(1, n_teeth):
+        plt.plot(x_plot_array[i], u_ss[i], color='blue')
+    plt.xlabel(r'$x$')
+    plt.legend()
+    plt.show()
+
+def compareEvolutionandNewtonGMRES():
+    # Domain parameters
+    n_teeth = 10
+    n_gaps = n_teeth - 1
+    gap_over_tooth_size_ratio = 1
+    n_points_per_tooth = 11
+    n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
+    N = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
+
+    # Initial condition - Convert it to the Gap-Tooth datastructure
+    x_array = np.linspace(0.0, 1.0, N)
+    x_plot_array = []
+    for i in range(n_teeth):
+        x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+
+    # Load the data
+    lam = 1.0
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    evolution = np.load(directory + 'Evolution_Steady_State_lambda=' + str(lam) + '.npy')
+    ss = np.load(directory + 'Newton-GMRES_Steady_State_lambda=' + str(lam) + '.npy')
+    evolution = toPatch(x_plot_array, evolution)
+    ss = toPatch(x_plot_array, ss)
+
+    # Plot Both
+    plt.plot(x_plot_array[0], evolution[0], label='Time Evolution', color='tab:blue')
+    plt.plot(x_plot_array[0], ss[0], label='Newton-GMRES', color='tab:orange')
+    for i in range(1, n_teeth):
+        plt.plot(x_plot_array[i], evolution[i], color='tab:blue')
+        plt.plot(x_plot_array[i], ss[i], color='tab:orange')
+    plt.xlabel(r'$x$')
+    plt.legend()
+    plt.show()
 
 if __name__ == '__main__':
-    gapToothEvolution()
+    compareEvolutionandNewtonGMRES()
