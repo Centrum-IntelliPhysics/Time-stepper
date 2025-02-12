@@ -80,22 +80,34 @@ def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params, verbose=Fa
         u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
     return u_sol
 
-def toPatch(x_plot_array, u0):
+def toPatch(x_plot_array, u):
     length = len(x_plot_array[0])
-    u_sol = []
+    u_patch = []
     for i in range(len(x_plot_array)):
-        u_sol.append(u0[i * length:(i+1)*length])
-    return u_sol
+        u_patch.append(u[i * length:(i+1)*length])
+    return u_patch
 
-def toNumpyArray(u_sol):
-    length = u_sol[0].size
-    u_new = np.zeros(len(u_sol) * length)
-    for i in range(len(u_sol)):
-        u_new[i * length:(i+1)*length] = u_sol[i]
-    return u_new
+def toNumpyArray(u_patch):
+    length = u_patch[0].size
+    u = np.zeros(len(u_patch) * length)
+    for i in range(len(u_patch)):
+        u[i * length:(i+1)*length] = u_patch[i]
+    return u
+
+def eval_counter(func):
+    count = 0
+    def wrapper(*args, **kwargs):
+        nonlocal count
+        count += 1
+        wrapper.count = count
+        return func(*args, **kwargs)
+    wrapper.count = count
+    return wrapper
 
 # Input u0 is a numpy array
+@eval_counter
 def psiPatch(x_plot_array, u0, dx, dt, T_patch, T, params):
+    print('Evaluation ', psiPatch.count)
     u_sol = toPatch(x_plot_array, u0)
     u_new = patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params)
 
@@ -176,7 +188,7 @@ def calculateSteadyState():
     T_patch = 10 * dt
     T_psi = 1.0
     F = lambda u: psiPatch(x_plot_array, u, dx, dt, T_patch, T_psi, params)
-    u_ss = opt.newton_krylov(F, u0, verbose=True)
+    u_ss = opt.newton_krylov(F, u0, verbose=True, f_tol=1.e-14)
 
     # Store the solution to file
     directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
@@ -228,5 +240,51 @@ def compareEvolutionandNewtonGMRES():
     plt.legend()
     plt.show()
 
+def calculateEigenvalues():
+    RBF.RBFInterpolator.lu_exists = False
+
+    # Domain parameters
+    n_teeth = 10
+    n_gaps = n_teeth - 1
+    gap_over_tooth_size_ratio = 1
+    n_points_per_tooth = 11
+    n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
+    N = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
+    dx = 1.0 / (N - 1)
+
+    # Model parameters
+    lam = 1.0
+    params = {'lambda': lam}
+
+    # Load the steady-state
+    x_array = np.linspace(0.0, 1.0, N)
+    x_plot_array = []
+    for i in range(n_teeth):
+        x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    u_ss = np.load(directory + 'Newton-GMRES_Steady_State_lambda=' + str(lam) + '.npy')
+
+    # Eigenvalues through arnoldi
+    dt = 1.e-5
+    T_patch = 10 * dt
+    T_psi = 1.0
+    rdiff = 1.e-8
+    psi_val = psiPatch(x_plot_array, u_ss, dx, dt, T_patch, T_psi, params)
+    print(lg.norm(psi_val))
+    M = n_teeth * n_points_per_tooth
+    d_psi_mvp = lambda v: (psiPatch(x_plot_array, u_ss + rdiff * v, dx, dt, T_patch, T_psi, params) - psi_val) / rdiff
+    Dpsi = slg.LinearOperator(shape=(M,M), matvec=d_psi_mvp)
+    eigvals, eigvecs = slg.eigs(Dpsi, k=M-2, which='SM')
+
+    # Store the eigenvalues
+    np.save(directory + 'GapToothEigenvalues.npy', eigvals)
+
+    # Plot the eigenvalues
+    plt.scatter(np.real(eigvals), np.imag(eigvals), label='Gap-Tooth Timestepper')
+    plt.xlabel('Real Part')
+    plt.ylabel('Imaginary Part')
+    plt.legend()
+    plt.show()
+
 if __name__ == '__main__':
-    compareEvolutionandNewtonGMRES()
+    calculateEigenvalues()
