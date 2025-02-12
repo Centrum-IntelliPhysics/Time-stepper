@@ -52,7 +52,9 @@ def numericalContinuation(x0, lam0, initial_tangent, max_steps, ds, ds_min, ds_m
     lam_path = [lam]
     print('Step {0:3d}:\t |u|_inf: {1:4f}\t lambda: {2:4f}\t ds: {3:6f}'.format(0, lg.norm(x_path[0], ord=np.inf), lam, ds))
 
-    for n in range(1, max_steps+1):
+    #for n in range(1, max_steps+1):
+    n = 1
+    while True:
         if lam < 0.1:
             print('Artificial end point reached, quiting this branch.')
             break
@@ -94,6 +96,7 @@ def numericalContinuation(x0, lam0, initial_tangent, max_steps, ds, ds_min, ds_m
             return x_path, lam_path
 		
         print('Step {0:3d}:\t |u|_inf: {1:4f}\t lambda: {2:4f}\t ds: {3:6f}'.format(n, lg.norm(x_path[-1], ord=np.inf), lam, ds))
+        n += 1
 
     return x_path, lam_path
 
