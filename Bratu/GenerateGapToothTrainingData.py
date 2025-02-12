@@ -29,7 +29,7 @@ store_directory = '/Users/hannesvdc/Research/Projects/Time-stepper/Bratu/data/'
 dt = 1.e-5
 T_patch = 10 * dt
 T = 1.0
-n_initials = 1000
+n_initials = 100
 rng = rd.RandomState()
 for n in range(n_initials):
     print('Initial', n)
@@ -41,9 +41,9 @@ for n in range(n_initials):
         perturbation_patch.append(perturbation[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
     u0 = toPatch(x_plot_array, u_ss + toNumpyArray(perturbation_patch))
 
-    # Evolve and ignore the first 5 steps
+    # Evolve
     _, evolution = patchTimestepper(x_plot_array, u0, dx, dt, T_patch, T, params, storeEvolution=True)
-    evolution = evolution[5:,:]
 
-    # Store
-    np.save(store_directory + 'Initial='+str(n)+'_.npy', evolution)
+    # Store each patch separately and ignore the first 5 steps
+    for patch in range(n_teeth):
+        np.save(store_directory + 'Initial='+str(n)+'_patch='+str(patch) + '.npy', evolution[patch][5:,:])

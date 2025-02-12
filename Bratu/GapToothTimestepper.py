@@ -51,7 +51,7 @@ def eulerNeumannPatchTimestepper(u, dx, dt, T, a, b, patch, n_teeth, params):
         u = euler_patch(u, dx, dt, a, b, patch, n_teeth, params)
     return u
 
-def patchOneTimestep(u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct'):
+def patchOneTimestep(u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct', return_neumann=False):
    
     # Build the interpolating spline based on left- and right endpoints
     x_spline_values = []
@@ -74,32 +74,52 @@ def patchOneTimestep(u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_d
 
     # For each tooth: calculate Neumann boundary conditions and simulate in that tooth
     return_u = []
+    left_bcs = []
+    right_bcs = []
     for patch in range(n_teeth):
         left_x = x_array[patch][0]
         right_x = x_array[patch][-1]
         a = u_spline.derivative(left_x)
         b = u_spline.derivative(right_x)
+        left_bcs.append(a)
+        right_bcs.append(b)
 
         u_new = eulerNeumannPatchTimestepper(u0[patch], dx, dt, T_patch, a, b, patch, n_teeth, params)
         return_u.append(u_new)
 
+    if return_neumann:
+        return return_u, left_bcs, right_bcs
     return return_u
 
 def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params, verbose=False, storeEvolution=False):
     n_teeth = len(x_plot_array)
+    n_micro_points = x_plot_array[0].size
     n_patch_steps = int(T / T_patch)
 
+    # Evolution is a datastructure for the DeepONet. It is a list of n_teeth patches, and each patch is a 
+    # numpy array with 2*n_micro_points + 2 elements to store (u[patch], left_bc, right_bc, x[patch])
     if storeEvolution:
-        evolution = np.zeros((n_patch_steps+1, n_teeth * x_plot_array[0].size))
-        evolution[0,:] = toNumpyArray(u_sol)
+        evolution = n_teeth * [np.zeros((n_patch_steps+1, n_micro_points + 2 + n_micro_points))]
+        for patch in range(n_teeth):
+            evolution[patch][0,0:n_micro_points] = u_sol[patch]
+            evolution[patch][0,n_micro_points] = 0.0
+            evolution[patch][0,n_micro_points+1] = 0.0
+            evolution[patch][0,n_micro_points+2:] = x_plot_array[patch]
 
     for k in range(n_patch_steps):
         if verbose and k % 1000 == 0:
             print('t =', round(k*T_patch, 4))
-        u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
+
         if storeEvolution:
-            evolution[k+1,:] = toNumpyArray(u_sol)
-    
+            u_sol, left_bcs, right_bcs = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct', return_neumann=True)
+            for patch in range(n_teeth):
+                evolution[patch][k+1,0:n_micro_points] = u_sol[patch]
+                evolution[patch][k+1,n_micro_points] = left_bcs[patch]
+                evolution[patch][k+1,n_micro_points+1] = right_bcs[patch]
+                evolution[patch][k+1,n_micro_points+2:] = x_plot_array[patch]
+        else:
+            u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
+            
     if storeEvolution:
         return u_sol, evolution
     return u_sol
