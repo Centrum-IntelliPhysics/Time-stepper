@@ -212,16 +212,19 @@ def compareEvolutionandNewtonGMRES():
     directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
     evolution = np.load(directory + 'Evolution_Steady_State_lambda=' + str(lam) + '.npy')
     ss = np.load(directory + 'Newton-GMRES_Steady_State_lambda=' + str(lam) + '.npy')
-    evolution = toPatch(x_plot_array, evolution)
+    print('evolution', evolution)
+    print('ss', ss)
     ss = toPatch(x_plot_array, ss)
+    print(ss)
 
     # Plot Both
     plt.plot(x_plot_array[0], evolution[0], label='Time Evolution', color='tab:blue')
-    plt.plot(x_plot_array[0], ss[0], label='Newton-GMRES', color='tab:orange')
+    plt.plot(x_plot_array[0], ss[0], label='Newton-GMRES', color='tab:orange', linestyle='dashed')
     for i in range(1, n_teeth):
         plt.plot(x_plot_array[i], evolution[i], color='tab:blue')
-        plt.plot(x_plot_array[i], ss[i], color='tab:orange')
+        plt.plot(x_plot_array[i], ss[i], color='tab:orange', linestyle='dashed')
     plt.xlabel(r'$x$')
+    plt.title('Steady-State of the Bratu Equation via the Gap-Tooth Scheme')
     plt.legend()
     plt.show()
 
