@@ -6,6 +6,20 @@ import matplotlib.pyplot as plt
 
 import RBF
 
+def toPatch(x_plot_array, u):
+    length = len(x_plot_array[0])
+    u_patch = []
+    for i in range(len(x_plot_array)):
+        u_patch.append(u[i * length:(i+1)*length])
+    return u_patch
+
+def toNumpyArray(u_patch):
+    length = u_patch[0].size
+    u = np.zeros(len(u_patch) * length)
+    for i in range(len(u_patch)):
+        u[i * length:(i+1)*length] = u_patch[i]
+    return u
+
 # The PDE right-hand side without boundary conditions
 def rhs(u, dx, params):
     u_left = np.roll(u, -1)
@@ -71,28 +85,24 @@ def patchOneTimestep(u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_d
 
     return return_u
 
-def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params, verbose=False):
+def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params, verbose=False, storeEvolution=False):
     n_teeth = len(x_plot_array)
     n_patch_steps = int(T / T_patch)
+
+    if storeEvolution:
+        evolution = np.zeros((n_patch_steps+1, n_teeth * x_plot_array[0].size))
+        evolution[0,:] = toNumpyArray(u_sol)
+
     for k in range(n_patch_steps):
         if verbose and k % 1000 == 0:
             print('t =', round(k*T_patch, 4))
         u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
+        if storeEvolution:
+            evolution[k+1,:] = toNumpyArray(u_sol)
+    
+    if storeEvolution:
+        return u_sol, evolution
     return u_sol
-
-def toPatch(x_plot_array, u):
-    length = len(x_plot_array[0])
-    u_patch = []
-    for i in range(len(x_plot_array)):
-        u_patch.append(u[i * length:(i+1)*length])
-    return u_patch
-
-def toNumpyArray(u_patch):
-    length = u_patch[0].size
-    u = np.zeros(len(u_patch) * length)
-    for i in range(len(u_patch)):
-        u[i * length:(i+1)*length] = u_patch[i]
-    return u
 
 def eval_counter(func):
     count = 0
@@ -274,7 +284,12 @@ def calculateEigenvalues():
     M = n_teeth * n_points_per_tooth
     d_psi_mvp = lambda v: (psiPatch(x_plot_array, u_ss + rdiff * v, dx, dt, T_patch, T_psi, params) - psi_val) / rdiff
     Dpsi = slg.LinearOperator(shape=(M,M), matvec=d_psi_mvp)
-    eigvals, eigvecs = slg.eigs(Dpsi, k=M-2, which='SM')
+
+    # Build the full Jacobian matrix
+    Dpsi_matrix = np.zeros((M,M))
+    for i in range(M):
+        Dpsi_matrix[:,i] = Dpsi.matvec(np.eye(M)[:,i])
+    eigvals, eigvecs = lg.eig(Dpsi_matrix)
 
     # Store the eigenvalues
     np.save(directory + 'GapToothEigenvalues.npy', eigvals)
