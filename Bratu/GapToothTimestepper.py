@@ -71,7 +71,16 @@ def patchOneTimestep(u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_d
 
     return return_u
 
-def patchTimestepper():
+def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params):
+    n_teeth = len(x_plot_array)
+    n_patch_steps = int(T / T_patch)
+    for k in range(n_patch_steps):
+        if k % 1000 == 0:
+            print('t =', round(k*T_patch, 4))
+        u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
+    return u_sol
+
+def gapToothEvolution():
     RBF.RBFInterpolator.lu_exists = False
 
     # Domain parameters
@@ -101,11 +110,7 @@ def patchTimestepper():
     dt = 1.e-5
     T = 100.0
     T_patch = 10 * dt
-    n_patch_steps = int(T / T_patch)
-    for k in range(n_patch_steps):
-        if k % 1000 == 0:
-            print('t =', round(k*T_patch, 4))
-        u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
+    u_sol = patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params)
 
     # Plot the solution of each tooth
     plt.plot(x_plot_array[0], u_sol[0], label=r'$u(x, t=$' + str(T) + r'$)$', color='blue')
@@ -117,4 +122,4 @@ def patchTimestepper():
 
 
 if __name__ == '__main__':
-    patchTimestepper()
+    gapToothEvolution()

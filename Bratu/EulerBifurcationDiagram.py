@@ -4,7 +4,7 @@ import numpy.random as rd
 import scipy.sparse.linalg as slg
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
-
+import argparse
 from EulerTimestepper import psi, calculateSteadyState
 
 N = 51
@@ -14,7 +14,7 @@ dt = 1.e-4
 T_psi = 1.e-1
 params = {}
 rdiff = 1.e-8
-directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/FitzhughNagumo/'
+directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
 
 def G(x, lam):
     params['lambda'] = lam
@@ -135,6 +135,14 @@ def calculateBifurcationDiagram():
     np.save(directory + 'euler_bf_diagram_branch1.npy', np.hstack((x1_path, lam1_path[:,np.newaxis])))
     np.save(directory + 'euler_bf_diagram_branch2.npy', np.hstack((x2_path, lam2_path[:,np.newaxis])))
 
+def plotBifurcationDiagram():
+    path_1 = np.load(directory + 'euler_bf_diagram_branch1.npy')
+    path_2 = np.load(directory + 'euler_bf_diagram_branch2.npy')
+    x1_path = path_1[:,:N]
+    lam1_path = path_1[:,N]
+    x2_path = path_2[:,:N]
+    lam2_path = path_2[:,N]
+
     # Plot both branches
     plot_x1_path = np.max(np.abs(x1_path[:, 0:N]), axis=1)
     plot_x2_path = np.max(np.abs(x2_path[:, 0:N]), axis=1)
@@ -144,6 +152,14 @@ def calculateBifurcationDiagram():
     plt.ylabel(r'$|u|_{\infty}$')
     plt.show()
 
+def parseArguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--experiment', nargs='?', dest='experiment')
+    return parser.parse_args()
 
 if __name__ == '__main__':
-    calculateBifurcationDiagram()
+    args = parseArguments()
+
+    if args.experiment == 'compute':
+        calculateBifurcationDiagram()
+    plotBifurcationDiagram()
