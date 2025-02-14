@@ -11,17 +11,15 @@ import matplotlib.pyplot as plt
 
 # Just some sanity pytorch settings
 pt.set_grad_enabled(True)
+dtype = pt.float32
 if pt.backends.mps.is_available():
     device = pt.device("mps")
-    dtype = pt.float32
 elif pt.cuda.is_available():
     print('CUDA Device Available:', pt.cuda.get_device_name(0))
-    device = pt.cuda.device(0)
-    dtype = pt.float32
+    device = pt.device('cuda:0')
 else:
     print('Using CPU because no GPU is available.')
     device = pt.device("cpu")
-    dtype = pt.float64
 
 # Load the data in memory
 print('Loading Training Data ...')
@@ -38,8 +36,8 @@ trunk_input_size = 1
 branch_layers = [branch_input_size, 400, 400, 400, p]
 trunk_layers  = [trunk_input_size,  400, 400, 400, p]
 network = DeepONet(branch_layers=branch_layers, trunk_layers=trunk_layers).to(device, dtype=dtype)
-optimizer = optim.Adam(network.parameters(), lr=1.e-4)
-step = 100
+optimizer = optim.Adam(network.parameters(), lr=1.e-3, amsgrad=True)
+step = 10
 scheduler = sch.StepLR(optimizer, step_size=step, gamma=0.1)
 print('Data Size / Number of Parameters:', len(dataset) / (1.0*network.getNumberOfParameters()))
 

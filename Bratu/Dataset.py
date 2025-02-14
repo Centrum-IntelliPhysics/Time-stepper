@@ -28,6 +28,11 @@ class PatchDataset(Dataset):
                     self.output_data[data_index:data_index+n_data_rows_per_initial,:] = output_batch
                     data_index += n_data_rows_per_initial
 
+        # Subsample to 10,000,000 data rows
+        self.total_data_rows = 2**23
+        indices = pt.randperm(self.input_data.shape[0])[:self.total_data_rows]
+        self.input_data = self.input_data[indices,:]
+        self.output_data = self.output_data[indices,:]
         print((self.input_data.numel()*self.input_data.element_size() + self.output_data.numel()*self.output_data.element_size()) / 1024.0**2, 'MB')
 
     def __len__(self):

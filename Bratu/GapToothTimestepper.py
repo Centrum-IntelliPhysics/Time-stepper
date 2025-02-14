@@ -147,7 +147,7 @@ def gapToothEvolution():
     RBF.RBFInterpolator.lu_exists = False
 
     # Domain parameters
-    n_teeth = 10
+    n_teeth = 11
     n_gaps = n_teeth - 1
     gap_over_tooth_size_ratio = 1
     n_points_per_tooth = 11
@@ -156,7 +156,7 @@ def gapToothEvolution():
     dx = 1.0 / (N - 1)
 
     # Model parameters
-    lam = 1.0
+    lam = 3.5
     params = {'lambda': lam}
 
     # Initial condition - Convert it to the Gap-Tooth datastructure
@@ -191,7 +191,7 @@ def calculateSteadyState():
     RBF.RBFInterpolator.lu_exists = False
 
     # Domain parameters
-    n_teeth = 10
+    n_teeth = 11
     n_gaps = n_teeth - 1
     gap_over_tooth_size_ratio = 1
     n_points_per_tooth = 11
@@ -200,7 +200,7 @@ def calculateSteadyState():
     dx = 1.0 / (N - 1)
 
     # Model parameters
-    lam = 1.0
+    lam = 3.5
     params = {'lambda': lam}
 
     # Initial condition - Convert it to the Gap-Tooth datastructure
@@ -236,7 +236,7 @@ def calculateSteadyState():
 
 def compareEvolutionandNewtonGMRES():
     # Domain parameters
-    n_teeth = 10
+    n_teeth = 11
     n_gaps = n_teeth - 1
     gap_over_tooth_size_ratio = 1
     n_points_per_tooth = 11
@@ -250,7 +250,7 @@ def compareEvolutionandNewtonGMRES():
         x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
 
     # Load the data
-    lam = 1.0
+    lam = 3.5
     directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
     evolution = np.load(directory + 'Evolution_Steady_State_lambda=' + str(lam) + '.npy')
     ss = np.load(directory + 'Newton-GMRES_Steady_State_lambda=' + str(lam) + '.npy')
@@ -274,7 +274,7 @@ def calculateEigenvalues():
     RBF.RBFInterpolator.lu_exists = False
 
     # Domain parameters
-    n_teeth = 10
+    n_teeth = 11
     n_gaps = n_teeth - 1
     gap_over_tooth_size_ratio = 1
     n_points_per_tooth = 11
@@ -283,7 +283,7 @@ def calculateEigenvalues():
     dx = 1.0 / (N - 1)
 
     # Model parameters
-    lam = 1.0
+    lam = 3.5
     params = {'lambda': lam}
 
     # Load the steady-state
