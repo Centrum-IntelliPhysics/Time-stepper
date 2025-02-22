@@ -6,23 +6,23 @@ from EulerTimestepper import timestepper, psi, calculateSteadyState, calculateRH
 
 def testEulerTimestepper():
     # Model Parameters
-    lam = 3.4
+    lam = 3.5
     params = {'lambda': lam}
 
     # Geometry Parameters
-    N = 51
+    N = 191 #51
     x_array = np.linspace(0.0, 1.0, N)
     dx = 1.0 / (N-1)
     u0 = 0.0 * x_array
 
     # Time-stepping parameters
-    T = 100.0
-    dt = 1.e-4
+    T = 10.0#100.0
+    dt = 1.e-5
     T_psi = 1.0
 
     # Do time-evolution
     print('Time Stepping...')
-    u_evol = timestepper(u0, dx, dt, T, params, verbose=False)
+    u_evol = timestepper(u0, dx, dt, T, params, verbose=True)
     print('Psi at T =', T, ' :', lg.norm(psi(u_evol, T_psi, dx, dt, params)))
 
     # Do Newton-GMRES
