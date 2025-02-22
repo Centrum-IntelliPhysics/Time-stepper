@@ -4,8 +4,6 @@ import scipy.sparse.linalg as slg
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
-
 import RBF
 
 def toPatch(x_plot_array, u):
@@ -53,7 +51,7 @@ def eulerNeumannPatchTimestepper(u, dx, dt, T, a, b, patch, n_teeth, params):
         u = euler_patch(u, dx, dt, a, b, patch, n_teeth, params)
     return u
 
-def patchOneTimestep(executor, u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct', return_neumann=False):
+def patchOneTimestep(u0, x_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct', return_neumann=False):
    
     # Build the interpolating spline based on left- and right endpoints
     x_spline_values = []
@@ -75,7 +73,10 @@ def patchOneTimestep(executor, u0, x_array, n_teeth, dx, dt, T_patch, params, so
     # plt.show()
 
     # Function to process each patch
-    def process_patch(patch):
+    return_u = [None] * n_teeth
+    left_bcs = [None] * n_teeth
+    right_bcs = [None] * n_teeth
+    for patch in range(n_teeth):
         left_x = x_array[patch][0]
         right_x = x_array[patch][-1]
         a = u_spline.derivative(left_x)
@@ -84,19 +85,6 @@ def patchOneTimestep(executor, u0, x_array, n_teeth, dx, dt, T_patch, params, so
         # Calculate the new state using the timestepper
         u_new = eulerNeumannPatchTimestepper(u0[patch], dx, dt, T_patch, a, b, patch, n_teeth, params)
 
-        # Return the results for this patch
-        return u_new, a, b
-
-    # Parallel execution using ProcessPoolExecutor
-    return_u = [None] * n_teeth
-    left_bcs = [None] * n_teeth
-    right_bcs = [None] * n_teeth
-    futures = {
-        executor.submit(process_patch, patch): patch for patch in range(n_teeth)
-    }
-    for future in as_completed(futures):
-        patch = futures[future]  # Get the patch index
-        u_new, a, b = future.result()
         return_u[patch] = u_new
         left_bcs[patch] = a
         right_bcs[patch] = b
@@ -120,20 +108,19 @@ def patchTimestepper(x_plot_array, u_sol, dx, dt, T_patch, T, params, verbose=Fa
             evolution[patch][0,n_micro_points+1] = 0.0
             evolution[patch][0,n_micro_points+2:] = x_plot_array[patch]
 
-    with ThreadPoolExecutor(max_workers=n_teeth) as executor:
-        for k in range(n_patch_steps):
-            if verbose and k % 1000 == 0:
-                print('t =', round(k*T_patch, 4))
+    for k in range(n_patch_steps):
+        if verbose and k % 1000 == 0:
+            print('t =', round(k*T_patch, 4))
 
-            if storeEvolution:
-                u_sol, left_bcs, right_bcs = patchOneTimestep(executor, u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct', return_neumann=True)
-                for patch in range(n_teeth):
-                    evolution[patch][k+1,0:n_micro_points] = u_sol[patch]
-                    evolution[patch][k+1,n_micro_points] = left_bcs[patch]
-                    evolution[patch][k+1,n_micro_points+1] = right_bcs[patch]
-                    evolution[patch][k+1,n_micro_points+2:] = x_plot_array[patch]
-            else:
-                u_sol = patchOneTimestep(executor, u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
+        if storeEvolution:
+            u_sol, left_bcs, right_bcs = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct', return_neumann=True)
+            for patch in range(n_teeth):
+                evolution[patch][k+1,0:n_micro_points] = u_sol[patch]
+                evolution[patch][k+1,n_micro_points] = left_bcs[patch]
+                evolution[patch][k+1,n_micro_points+1] = right_bcs[patch]
+                evolution[patch][k+1,n_micro_points+2:] = x_plot_array[patch]
+        else:
+            u_sol = patchOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, T_patch, params, solver='lu_direct')
             
     if storeEvolution:
         return u_sol, evolution
@@ -285,13 +272,11 @@ def calculateEigenvalues():
     d_psi_mvp = lambda v: (psiPatch(x_plot_array, u_ss + rdiff * v, dx, dt, T_patch, T_psi, params, verbose=True) - psi_val) / rdiff
     Dpsi = slg.LinearOperator(shape=(M,M), matvec=d_psi_mvp)
 
-    eigvals, eigvecs = slg.eigs(Dpsi, k=M-2, which='LM', return_eigenvectors=True)
-
     # Build the full Jacobian matrix
-    #Dpsi_matrix = np.zeros((M,M))
-    #for i in range(M):
-    #    Dpsi_matrix[:,i] = Dpsi.matvec(np.eye(M)[:,i])
-    #eigvals, eigvecs = lg.eig(Dpsi_matrix)
+    Dpsi_matrix = np.zeros((M,M))
+    for i in range(M):
+        Dpsi_matrix[:,i] = Dpsi.matvec(np.eye(M)[:,i])
+    eigvals, eigvecs = lg.eig(Dpsi_matrix)
 
     # Store the eigenvalues
     np.save(directory + 'GapToothEigenvalues.npy', eigvals)

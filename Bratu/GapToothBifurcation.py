@@ -8,10 +8,10 @@ import RBF
 from GapToothTimestepper import psiPatch
 
 # Domain parameters
-n_teeth = 11
+n_teeth = 21
 n_gaps = n_teeth - 1
 gap_over_tooth_size_ratio = 1
-n_points_per_tooth = 11
+n_points_per_tooth = 15
 n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
 N = n_teeth * n_points_per_tooth
 M = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
@@ -21,9 +21,9 @@ x_plot_array = []
 for i in range(n_teeth):
     x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
 
-dt = 1.e-5
+dt = 1.e-6
 T_patch = 10 * dt
-T_psi = 1.e-2
+T_psi = 1.e-4
 rdiff = 1.e-8
 directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
 params = {}
@@ -124,11 +124,13 @@ def computeBifurcationDiagram():
     ds = ds_max
 
     # Initial condition - Convert it to the Gap-Tooth datastructure
+    print('Loading the initial condition...')
     directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
     filename = 'Newton-GMRES_Steady_State_lambda=' + str(lam0) + '.npy'
     u0 = np.load(directory + filename)
 
     # Calculate the tangent to the path at the initial condition x0
+    print('Computing the initial tangent vector...')
     rng = rd.RandomState()
     random_tangent = rng.normal(0.0, 1.0, N+1)
     initial_tangent = computeTangent(lambda v: dGdx_v(u0, v, lam0), dGdlam(u0, lam0), random_tangent / lg.norm(random_tangent), tolerance)
