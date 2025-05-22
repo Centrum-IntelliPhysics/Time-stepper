@@ -40,7 +40,7 @@ def psi(x, T_psi):
     n = int(T_psi / dT)
     for _ in range(n):
         x = deeponet(x)
-    return x0 - x
+    return x#x0 - x
 
 def debugEigenvalues():
     # Load the initial condition from file.
@@ -78,31 +78,29 @@ def debugEigenvalues():
     deeponet_eigvals, deeponet_eigvecs = lg.eig(dF_fd)
 
     # Plot the (hopefully) leading Rayleigh Coefficients
-    circle = plt.Circle((0.5, 0), 0.5, color='k', fill=False)
+    circle = plt.Circle((0.0, 0), 1.0, color='k', linestyle='--', fill=False)
     plt.gca().add_patch(circle)
-    plt.scatter(np.real(euler_eigvals), np.imag(euler_eigvals), edgecolors='tab:orange', facecolor='none', label='Euler Timestepper Eigenvalues')
+    plt.scatter(1-np.real(euler_eigvals), np.imag(euler_eigvals), edgecolors='tab:blue', label='Euler FD')
     #plt.scatter(np.real(rayleigh_coefs), np.imag(rayleigh_coefs), color='tab:blue', label='DeepONet Rayleigh Coefficients')
-    plt.scatter(np.real(deeponet_eigvals), np.imag(deeponet_eigvals), color='k', marker='x', label='DeepONet Eigenvalues FD')
+    plt.scatter(np.real(deeponet_eigvals), np.imag(deeponet_eigvals), color='tab:red',  facecolor='none', label='DeepONet')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
-    plt.title('DeepONet versus Euler: Eigenvalues')
+    #plt.title('DeepONet versus Euler: Eigenvalues')
     plt.legend(loc='upper left')
 
     # Plot the first two eigenvectors (Euler and DeepONet)
     plot_grid = np.linspace(0.0, 1.0, N)
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.plot(plot_grid, np.real(euler_eigvecs[0:200,0]))
-    ax1.plot(plot_grid,-np.real(deeponet_eigvecs[0:200,0]))
-    ax2.plot(plot_grid, np.real(euler_eigvecs[200:,0]), label='Euler')
-    ax2.plot(plot_grid,-np.real(deeponet_eigvecs[200:,0]), label='DeepONet with FD Jacobian')
+    fig = plt.figure()
+    ax1 = fig.gca()
+    ax1.plot(plot_grid, np.real(euler_eigvecs[0:200,0]), label=r'Euler FD $u$')
+    ax1.plot(plot_grid, np.real(euler_eigvecs[200:,0]), label=r'Euler FD $v$')
+    ax1.plot(plot_grid,-np.real(deeponet_eigvecs[0:200,0]), label=r'DeepONet $u$')
+    ax1.plot(plot_grid,-np.real(deeponet_eigvecs[200:,0]), label=r'DeepONet $v$')
     ax1.set_xlabel(r'$x$')
-    ax2.set_xlabel(r'$x$')
-    ax1.set_title(r'$u(x)$')
-    ax2.set_title(r'$v(x)$')
-    ax2.set_ylim([-0.2, 0.2])
-    ax2.legend()
-    plt.suptitle('Leading Eigenvector')
+    #ax2.set_ylim([-0.2, 0.2])
+    ax1.legend()
+    #plt.suptitle('Leading Eigenvector')
     plt.show()
 
 # Another Function for Debugging Purposes
@@ -175,12 +173,12 @@ def calculateEigenvalues():
     approx_deeponet_eigvals = 1.0 - np.exp(T_psi * f_eigvals)
 
     # Plot the Eigenvalues
-    plt.scatter(np.real(eigvals_fd), np.imag(eigvals_fd), label='Finite Differences')
-    plt.scatter(np.real(eigvals_ad), np.imag(eigvals_ad), edgecolors='tab:orange', facecolor='none', label='Automatic Differentiation')
+    plt.scatter(np.real(eigvals_fd), np.imag(eigvals_fd), color='tab:blue', label='Euler FD')
+    plt.scatter(np.real(eigvals_ad), np.imag(eigvals_ad), edgecolors='tab:red', facecolor='none', label='DeepONet')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.grid(visible=True, which='major', axis='both')
-    plt.title('DeepONet Eigenvalues')
+    #plt.title('DeepONet Eigenvalues')
     plt.legend()
 
     # Plot the Eigenvalues

@@ -118,10 +118,10 @@ def computeBifurcationDiagram():
 
     # Continuation Parameters
     tolerance = 1.e-10
-    max_steps = 10000
+    max_steps = 3000
     ds_min = 1.e-6
-    ds_max = 0.001
-    ds = ds_max
+    ds_max = 0.01
+    ds = 0.001
 
     # Initial condition - Convert it to the Gap-Tooth datastructure
     print('Loading the initial condition...')
