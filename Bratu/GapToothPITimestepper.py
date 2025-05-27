@@ -106,11 +106,11 @@ def gapToothProjectiveIntegrationEvolution():
     # Time-stepping
     dt = 1.e-6
     K = 2
-    Dt = 1.e-5
+    Dt = 2.e-6
     T = 0.5
     T_patch = 100 * dt
     for n in range(int(T / T_patch)):
-        u_sol = patchPIOneTimestep(u0, x_array, n_teeth, dx, dt, Dt, K, T_patch, params, solver='lu_direct', return_neumann=False)
+        u_sol = patchPIOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, params, solver='lu_direct', return_neumann=False)
 
     # Store the solution to file
     #directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
@@ -126,5 +126,13 @@ def gapToothProjectiveIntegrationEvolution():
     plt.legend()
     plt.show()
 
+def parseArguments():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--experiment', nargs='?', dest='experiment')
+    return parser.parse_args()
+
 if __name__ == '__main__':
-    gapToothProjectiveIntegrationEvolution()
+    args = parseArguments()
+    if args.experiment == 'evolution':
+        gapToothProjectiveIntegrationEvolution()
