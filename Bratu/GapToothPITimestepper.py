@@ -106,7 +106,7 @@ def gapToothProjectiveIntegrationEvolution():
     # Time-stepping
     dt = 1.e-6
     K = 2
-    Dt = 3.e-6
+    Dt = 4.e-6
     T = 0.5
     T_patch = 100 * dt
     for n in range(int(T / T_patch)):
