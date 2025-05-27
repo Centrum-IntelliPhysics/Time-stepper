@@ -180,7 +180,7 @@ def calculateSteadyState():
     K = 2
     Dt = 4.e-6
     T_patch = 100 * dt
-    T_psi = 1.e-3
+    T_psi = 1.e-2
     F = lambda u: psiPatch(u, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, T_psi, params, verbose=True)
     u_ss = opt.newton_krylov(F, u0, verbose=True, f_tol=1.e-14)
 
