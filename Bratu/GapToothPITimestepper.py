@@ -149,7 +149,7 @@ def gapToothProjectiveIntegrationEvolution():
     plt.legend()
     plt.show()
 
-def calculateSteadyState():
+def calculateSteadyState(_return=False):
     RBF.RBFInterpolator.lu_exists = False
 
     # Domain parameters
@@ -183,6 +183,8 @@ def calculateSteadyState():
     T_psi = 1.e-2
     F = lambda u: psiPatch(u, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, T_psi, params, verbose=True)
     u_ss = opt.newton_krylov(F, u0, verbose=True, f_tol=1.e-14)
+    if _return:
+        return u_ss
 
     # Store the solution to file
     #directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
@@ -199,6 +201,58 @@ def calculateSteadyState():
     plt.legend()
     plt.show()
 
+def calculateEigenvalues():
+    RBF.RBFInterpolator.lu_exists = False
+
+    # Domain parameters
+    n_teeth = 21
+    n_gaps = n_teeth - 1
+    gap_over_tooth_size_ratio = 1
+    n_points_per_tooth = 15
+    n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
+    N = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
+    dx = 1.0 / (N - 1)
+
+    # Model parameters
+    lam = 1.0
+    params = {'lambda': lam}
+
+    # Load the steady-state
+    x_array = np.linspace(0.0, 1.0, N)
+    x_plot_array = []
+    for i in range(n_teeth):
+        x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+    u_ss = calculateSteadyState(_return=True)
+
+    # Eigenvalues through arnoldi
+    dt = 1.e-6
+    K = 2
+    Dt = 4.e-6
+    T_patch = 100 * dt
+    T_psi = 1.e-2
+    rdiff = 1.e-8
+    psi_val =  psiPatch(u_ss, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, T_psi, params, verbose=True)
+    print(lg.norm(psi_val))
+    M = n_teeth * n_points_per_tooth
+    d_psi_mvp = lambda v: (psiPatch(x_plot_array, u_ss + rdiff * v, dx, dt, T_patch, T_psi, params, verbose=True) - psi_val) / rdiff
+    Dpsi = slg.LinearOperator(shape=(M,M), matvec=d_psi_mvp)
+
+    # Build the full Jacobian matrix
+    Dpsi_matrix = np.zeros((M,M))
+    for i in range(M):
+        Dpsi_matrix[:,i] = Dpsi.matvec(np.eye(M)[:,i])
+    eigvals, eigvecs = lg.eig(Dpsi_matrix)
+
+    # Store the eigenvalues
+    #np.save(directory + 'GapToothEigenvalues.npy', eigvals)
+
+    # Plot the eigenvalues
+    plt.scatter(np.real(1-eigvals), np.imag(eigvals), label='Gap-Tooth Timestepper')
+    plt.xlabel('Real Part')
+    plt.ylabel('Imaginary Part')
+    plt.legend()
+    plt.show()
+
 def parseArguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -211,3 +265,5 @@ if __name__ == '__main__':
         gapToothProjectiveIntegrationEvolution()
     elif args.experiment == 'steady-state':
         calculateSteadyState()
+    elif args.experiment == 'arnoldi':
+        calculateEigenvalues()
