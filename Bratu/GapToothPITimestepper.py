@@ -232,9 +232,9 @@ def calculateEigenvalues():
     T_psi = 1.e-2
     rdiff = 1.e-8
     psi_val =  psiPatch(u_ss, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, T_psi, params, verbose=True)
-    print(lg.norm(psi_val))
+    print('psi_val', lg.norm(psi_val))
     M = n_teeth * n_points_per_tooth
-    d_psi_mvp = lambda v: (psiPatch(x_plot_array, u_ss + rdiff * v, dx, dt, T_patch, T_psi, params, verbose=True) - psi_val) / rdiff
+    d_psi_mvp = lambda v: (psiPatch(u_ss + rdiff * v, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, T_psi, params, verbose=True) - psi_val) / rdiff
     Dpsi = slg.LinearOperator(shape=(M,M), matvec=d_psi_mvp)
 
     # Build the full Jacobian matrix
@@ -243,13 +243,19 @@ def calculateEigenvalues():
         Dpsi_matrix[:,i] = Dpsi.matvec(np.eye(M)[:,i])
     eigvals, eigvecs = lg.eig(Dpsi_matrix)
 
+    # Calculate the eigenvaleus using arnoldi
+    print('Arnoldi Method')
+    eigvals_arnoldi = slg.eigs(Dpsi, k=10, which='SM', return_eigenvectors=False)
+
     # Store the eigenvalues
     #np.save(directory + 'GapToothEigenvalues.npy', eigvals)
 
     # Plot the eigenvalues
-    plt.scatter(np.real(1-eigvals), np.imag(eigvals), label='Gap-Tooth Timestepper')
+    plt.scatter(np.real(1-eigvals), np.imag(eigvals), label='QR Method')
+    plt.scatter(np.real(1-eigvals_arnoldi), np.imag(eigvals_arnoldi), label='Arnoldi Method')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
+    plt.title('Eigenvalues of the Jacobian in Steady-State')
     plt.legend()
     plt.show()
 
