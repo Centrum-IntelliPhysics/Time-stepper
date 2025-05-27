@@ -78,6 +78,28 @@ def patchPIOneTimestep(u0, x_array, n_teeth, dx, dt, Dt, K, T_patch, params, sol
         return return_u, left_bcs, right_bcs
     return return_u
 
+def eval_counter(func):
+    count = 0
+    def wrapper(*args, **kwargs):
+        nonlocal count
+        count += 1
+        wrapper.count = count
+        return func(*args, **kwargs)
+    wrapper.count = count
+    return wrapper
+
+# Input u0 is a numpy array
+@eval_counter
+def psiPatch(u0, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, T_psi, params, verbose=False):
+    if verbose:
+        print('Evaluation ', psiPatch.count)
+
+    u_sol = toPatch(x_plot_array, u0)
+    for n in range(int(T_psi / T_patch)):
+        u_sol = patchPIOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, params, solver='lu_direct', return_neumann=False)
+
+    return u0 - toNumpyArray(u_sol)
+
 def gapToothProjectiveIntegrationEvolution():
     RBF.RBFInterpolator.lu_exists = False
 
@@ -127,6 +149,56 @@ def gapToothProjectiveIntegrationEvolution():
     plt.legend()
     plt.show()
 
+def calculateSteadyState():
+    RBF.RBFInterpolator.lu_exists = False
+
+    # Domain parameters
+    n_teeth = 21
+    n_gaps = n_teeth - 1
+    gap_over_tooth_size_ratio = 1
+    n_points_per_tooth = 15
+    n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
+    N = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
+    dx = 1.0 / (N - 1)
+
+    # Model parameters
+    lam = 1.0
+    params = {'lambda': lam}
+
+    # Initial condition - Convert it to the Gap-Tooth datastructure
+    x_array = np.linspace(0.0, 1.0, N)
+    x_plot_array = []
+    u0 = 0.0 * x_array
+    u_patch = []
+    for i in range(n_teeth):
+        u_patch.append(u0[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+        x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+    u0 = toNumpyArray(u_patch)
+
+    # Newton-GMRES
+    dt = 1.e-6
+    K = 2
+    Dt = 4.e-6
+    T_patch = 100 * dt
+    T_psi = 1.e-3
+    F = lambda u: psiPatch(u, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, T_psi, params, verbose=True)
+    u_ss = opt.newton_krylov(F, u0, verbose=True, f_tol=1.e-14)
+
+    # Store the solution to file
+    #directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    #filename = 'Newton-GMRES_Steady_State_lambda=' + str(lam) + '.npy'
+    #np.save(directory + filename, u_ss)
+
+    # Plot the solution of each tooth
+    u_ss = toPatch(x_plot_array, u_ss)
+    plt.plot(x_plot_array[0], u_ss[0], label='Newton-GMRES', color='blue')
+    for i in range(1, n_teeth):
+        plt.plot(x_plot_array[i], u_ss[i], color='blue')
+    plt.xlabel(r'$x$')
+    plt.title('Steady-State through Newton-Krylov')
+    plt.legend()
+    plt.show()
+
 def parseArguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -137,3 +209,5 @@ if __name__ == '__main__':
     args = parseArguments()
     if args.experiment == 'evolution':
         gapToothProjectiveIntegrationEvolution()
+    elif args.experiment == 'steady-state':
+        calculateSteadyState()
