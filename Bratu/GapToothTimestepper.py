@@ -278,15 +278,32 @@ def calculateEigenvalues():
         Dpsi_matrix[:,i] = Dpsi.matvec(np.eye(M)[:,i])
     eigvals, eigvecs = lg.eig(Dpsi_matrix)
 
+    # Calculate the eigenvaleus using arnoldi
+    print('Arnoldi Method')
+    eigvals_arnoldi = slg.eigs(Dpsi, k=10, which='SM', return_eigenvectors=False)
+
     # Store the eigenvalues
-    np.save(directory + 'GapToothEigenvalues.npy', eigvals)
+    np.save(directory + 'GapToothEigenvalues.npy', np.vstack((eigvals, eigvals_arnoldi)))
 
     # Plot the eigenvalues
-    plt.scatter(np.real(1-eigvals), np.imag(eigvals), label='Gap-Tooth Timestepper')
+    plt.scatter(np.real(1-eigvals), np.imag(eigvals), alpha=0.5, label='QR Method')
+    plt.scatter(np.real(1-eigvals_arnoldi), np.imag(eigvals_arnoldi), alpha=0.5, label='Arnoldi Method')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.legend()
     plt.show()
 
+def parseArguments():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--experiment', nargs='?', dest='experiment')
+    return parser.parse_args()
+
 if __name__ == '__main__':
-    calculateEigenvalues()
+    args = parseArguments()
+    if args.experiment == 'evolution':
+        gapToothEvolution()
+    elif args.experiment == 'steady-state':
+        calculateSteadyState()
+    elif args.experiment == 'arnoldi':
+        calculateEigenvalues()

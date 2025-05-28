@@ -136,9 +136,9 @@ def gapToothProjectiveIntegrationEvolution():
         u_sol = patchPIOneTimestep(u_sol, x_plot_array, n_teeth, dx, dt, Dt, K, T_patch, params, solver='lu_direct', return_neumann=False)
 
     # Store the solution to file
-    #directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
-    #filename = 'Evolution_Steady_State_lambda=' + str(lam) + '.npy'
-    #np.save(directory + filename, u_sol)
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    filename = 'Evolution_PI_Steady_State_lambda=' + str(lam) + '.npy'
+    np.save(directory + filename, u_sol)
 
     # Plot the solution of each tooth
     plt.plot(x_plot_array[0], u_sol[0], label=r'$u(x, t=$' + str(T) + r'$)$', color='blue')
@@ -187,9 +187,9 @@ def calculateSteadyState(_return=False):
         return u_ss
 
     # Store the solution to file
-    #directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
-    #filename = 'Newton-GMRES_Steady_State_lambda=' + str(lam) + '.npy'
-    #np.save(directory + filename, u_ss)
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    filename = 'Newton-GMRES_PI_Steady_State_lambda=' + str(lam) + '.npy'
+    np.save(directory + filename, u_ss)
 
     # Plot the solution of each tooth
     u_ss = toPatch(x_plot_array, u_ss)
@@ -248,11 +248,12 @@ def calculateEigenvalues():
     eigvals_arnoldi = slg.eigs(Dpsi, k=10, which='SM', return_eigenvectors=False)
 
     # Store the eigenvalues
-    #np.save(directory + 'GapToothEigenvalues.npy', eigvals)
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    np.save(directory + 'GapToothPIEigenvalues.npy', np.vstack((eigvals, eigvals_arnoldi)))
 
     # Plot the eigenvalues
-    plt.scatter(np.real(1-eigvals), np.imag(eigvals), label='QR Method')
-    plt.scatter(np.real(1-eigvals_arnoldi), np.imag(eigvals_arnoldi), label='Arnoldi Method')
+    plt.scatter(np.real(1-eigvals), np.imag(eigvals), alpha=0.5, label='QR Method')
+    plt.scatter(np.real(1-eigvals_arnoldi), np.imag(eigvals_arnoldi), alpha=0.5, label='Arnoldi Method')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
     plt.title('Eigenvalues of the Jacobian in Steady-State')
