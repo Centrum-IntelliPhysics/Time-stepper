@@ -219,7 +219,7 @@ def calculateSteadyState():
     # Newton-GMRES
     dt = 1.e-6
     T_patch = 10 * dt
-    T_psi = 1.e-3
+    T_psi = 1.e-2
     F = lambda u: psiPatch(x_plot_array, u, dx, dt, T_patch, T_psi, params)
     u_ss = opt.newton_krylov(F, u0, verbose=True, f_tol=1.e-14)
 
@@ -264,12 +264,12 @@ def calculateEigenvalues():
     # Eigenvalues through arnoldi
     dt = 1.e-6
     T_patch = 10 * dt
-    T_psi = 1.e-4
+    T_psi = 1.e-2
     rdiff = 1.e-8
     psi_val = psiPatch(x_plot_array, u_ss, dx, dt, T_patch, T_psi, params)
     print(lg.norm(psi_val))
     M = n_teeth * n_points_per_tooth
-    d_psi_mvp = lambda v: (psiPatch(x_plot_array, u_ss + rdiff * v, dx, dt, T_patch, T_psi, params, verbose=True) - psi_val) / rdiff
+    d_psi_mvp = lambda v: (psiPatch(x_plot_array, u_ss + rdiff * v, dx, dt, T_patch, T_psi, params, verbose=False) - psi_val) / rdiff
     Dpsi = slg.LinearOperator(shape=(M,M), matvec=d_psi_mvp)
 
     # Build the full Jacobian matrix
