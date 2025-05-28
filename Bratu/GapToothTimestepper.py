@@ -283,7 +283,8 @@ def calculateEigenvalues():
     eigvals_arnoldi = slg.eigs(Dpsi, k=10, which='SM', return_eigenvectors=False)
 
     # Store the eigenvalues
-    np.save(directory + 'GapToothEigenvalues.npy', np.vstack((eigvals, eigvals_arnoldi)))
+    np.save(directory + 'GapToothEigenvalues_QR.npy', eigvals)
+    np.save(directory + 'GapToothEigenvalues_Arnoldi.npy', eigvals_arnoldi)
 
     # Plot the eigenvalues
     plt.scatter(np.real(1-eigvals), np.imag(eigvals), alpha=0.5, label='QR Method')

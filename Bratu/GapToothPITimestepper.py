@@ -249,7 +249,8 @@ def calculateEigenvalues():
 
     # Store the eigenvalues
     directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
-    np.save(directory + 'GapToothPIEigenvalues.npy', np.vstack((eigvals, eigvals_arnoldi)))
+    np.save(directory + 'GapToothPIEigenvalues_QR.npy', eigvals)
+    np.save(directory + 'GapToothPIEigenvalues_Arnoldi.npy', eigvals_arnoldi)
 
     # Plot the eigenvalues
     plt.scatter(np.real(1-eigvals), np.imag(eigvals), alpha=0.5, label='QR Method')
