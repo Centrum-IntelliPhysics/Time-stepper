@@ -5,20 +5,22 @@ import matplotlib.pyplot as plt
 from EulerTimestepper import timestepper, psi, calculateSteadyState, calculateRHSEigenvalues, calculateLeadingEigenvalues
 
 def testEulerTimestepper():
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+
     # Model Parameters
-    lam = 3.5
+    lam = 1.0
     params = {'lambda': lam}
 
     # Geometry Parameters
-    N = 191 #51
+    N = 191
     x_array = np.linspace(0.0, 1.0, N)
     dx = 1.0 / (N-1)
     u0 = 0.0 * x_array
 
     # Time-stepping parameters
-    T = 10.0#100.0
+    T = 10.0
     dt = 1.e-5
-    T_psi = 1.0
+    T_psi = 1.e-2
 
     # Do time-evolution
     print('Time Stepping...')
@@ -31,10 +33,12 @@ def testEulerTimestepper():
     print('Psi in Steady State :', lg.norm(psi(u_ss, T_psi, dx, dt, params)))
 
     # Calculate the Eigenvalues using the Arnoldi method. First of the rhs, then of the timestepper
-    k = N - 2
+    k = 10
     f_eigvals, f_eigvecs = calculateRHSEigenvalues(u_ss, dx, params, k=k)
     psi_eigvals, psi_eigvecs = calculateLeadingEigenvalues(u_ss, T_psi, dx, dt, params, k=k)
-    approx_psi_eigvals = 1.0 - np.exp(T_psi * f_eigvals)
+    approx_psi_eigvals = np.exp(T_psi * f_eigvals)
+    np.save(directory + 'EulerEigenvalues_Arnoldi.npy', psi_eigvals)
+    np.save(directory + 'Analytic_Eigenvalues.npy', approx_psi_eigvals)
 
     # Plot the result
     plt.plot(x_array, u_evol, label=r'Solution at $T =$' + str(T))
@@ -50,7 +54,7 @@ def testEulerTimestepper():
     plt.title('PDE Eigenvalues')
     plt.legend()
     plt.figure()
-    plt.scatter(np.real(psi_eigvals), np.imag(psi_eigvals), label='Time Stepper')
+    plt.scatter(np.real(1-psi_eigvals), np.imag(psi_eigvals), label='Time Stepper')
     plt.scatter(np.real(approx_psi_eigvals), np.imag(approx_psi_eigvals), facecolors='none', edgecolors='tab:orange', label='Analytic Correspondence')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')

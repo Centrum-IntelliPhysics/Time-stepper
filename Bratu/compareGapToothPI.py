@@ -41,13 +41,19 @@ plt.title('Steady-State Profile of the Bratu Equation')
 plt.legend()
 
 # Plot all eigenvalues
+jitter = 0.01
 gt_arnoldi = np.load(directory + 'GapToothEigenvalues_Arnoldi.npy')
 gt_pi_arnoldi = np.load(directory + 'GapToothPIEigenvalues_Arnoldi.npy')
+euler_arnoldi = np.load(directory + 'EulerEigenvalues_Arnoldi.npy')
+analytic = np.load(directory + 'Analytic_Eigenvalues.npy')
 plt.figure()
-plt.scatter(np.real(1-gt_arnoldi), np.imag(gt_arnoldi), alpha=0.5, label='Gap-Tooth')
-plt.scatter(np.real(1-gt_pi_arnoldi), np.imag(gt_pi_arnoldi), alpha=0.5, label='Gap-Tooth with PI')
+plt.scatter(np.real(1-gt_pi_arnoldi), jitter + np.imag(gt_pi_arnoldi), alpha=0.6, color='limegreen', label='Gap-Tooth with PI')
+plt.scatter(np.real(1-gt_arnoldi), np.imag(gt_arnoldi), alpha=0.6, facecolors='none', edgecolors='tab:orange', label='Gap-Tooth')
+plt.scatter(np.real(analytic), -jitter + np.imag(analytic), alpha=0.6, marker='x', color='k', label='Ground Truth')
+plt.scatter(np.real(1-euler_arnoldi), 2*jitter + np.imag(euler_arnoldi), alpha=0.6, marker='^', color='steelblue', label='Euler')
 plt.xlabel('Real Part')
 plt.ylabel('Imaginary Part')
+plt.ylim((-0.5, 0.5))
 plt.title('Leading Eigenvalues of the Jacobian in Steady State')
 plt.legend()
 

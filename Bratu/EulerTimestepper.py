@@ -50,7 +50,8 @@ def calculateLeadingEigenvalues(x_ss, T_psi, dx, dt, params, k=10):
     M = x_ss.size
     
     r_diff = 1.e-8
-    d_psi_mvp = lambda w: (psi(x_ss + r_diff * w, T_psi, dx, dt, params) - psi(x_ss, T_psi, dx, dt, params)) / r_diff
+    psival = psi(x_ss, T_psi, dx, dt, params)
+    d_psi_mvp = lambda w: (psi(x_ss + r_diff * w, T_psi, dx, dt, params) - psival) / r_diff
     D_psi = slg.LinearOperator(shape=(M, M), matvec=d_psi_mvp)
     psi_eigvals, psi_eigvecs = slg.eigs(D_psi, k=k, which='SM', return_eigenvectors=True)
 
