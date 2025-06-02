@@ -5,7 +5,7 @@ import scipy.sparse.linalg as slg
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 import RBF
-from GapToothTimestepper import psiPatch
+from Bratu.old.GapToothTimestepper import psiPatch
 
 # Domain parameters
 n_teeth = 21

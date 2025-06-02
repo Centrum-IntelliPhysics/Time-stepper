@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from GapToothTimestepper import toPatch
+from Bratu.old.GapToothTimestepper import toPatch
 
 # Model parameters
 lam = 1.0

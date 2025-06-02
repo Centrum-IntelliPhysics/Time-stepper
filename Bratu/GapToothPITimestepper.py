@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 import RBF
 
-from GapToothTimestepper import toNumpyArray, toPatch, euler_patch
+from Bratu.old.GapToothTimestepper import toNumpyArray, toPatch, euler_patch
 
 def eulerPatchPITimestepper(u, dx, dt, Dt, K, T_patch, a, b, patch, n_teeth, params):
     N_PI_Steps = int(T_patch / Dt)

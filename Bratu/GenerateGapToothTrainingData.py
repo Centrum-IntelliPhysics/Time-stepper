@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as lg
 import numpy.random as rd
-from GapToothTimestepper import patchTimestepper, toPatch, toNumpyArray
+from Bratu.old.GapToothTimestepper import patchTimestepper, toPatch, toNumpyArray
 
 # Domain parameters
 n_teeth = 10
