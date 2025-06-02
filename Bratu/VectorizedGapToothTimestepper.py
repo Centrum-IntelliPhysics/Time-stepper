@@ -234,11 +234,11 @@ def gapToothEvolution():
     gt_evolution = np.load(directory + 'Evolution_Steady_State_lambda=' + str(lam) + '.npy')
 
     # Plot the solution of each tooth
-    plt.plot(x_plot_array[0], u_sol[0], label=r'$u(x, t=$' + str(T) + r'$)$ vectorized', color='blue')
-    plt.plot(x_plot_array[0], gt_evolution[0,:]+0.0001, label=r'$u(x, t=$' + str(T) + r'$)$ non-vectorized', color='tab:orange')
+    plt.plot(x_plot_array[0], gt_evolution[0,:], label=r'$u(x, t=$' + str(T) + r'$)$ non-vectorized', color='tab:orange')
+    plt.plot(x_plot_array[0], u_sol[0], label=r'$u(x, t=$' + str(T) + r'$)$ vectorized', linestyle='--', color='blue')
     for i in range(1, n_teeth):
-        plt.plot(x_plot_array[i], u_sol[i], color='blue')
         plt.plot(x_plot_array[i], gt_evolution[i,:]+0.0001, color='tab:orange')
+        plt.plot(x_plot_array[i], u_sol[i], linestyle='--', color='blue')
     plt.xlabel(r'$x$')
     plt.legend()
     plt.show()
@@ -282,11 +282,11 @@ def calculateSteadyState():
 
     # Plot the solution of each tooth
     u_ss_patch = toPatch(x_plot_array, u_ss_numpy)
-    plt.plot(x_plot_array[0], u_ss_patch[0], label='Newton-GMRES Vectorized', color='blue')
-    plt.plot(x_plot_array[0], gt_nk[0,:]+0.0001, label='Newton-GMRES non-vectorized', color='tab:orange')
+    plt.plot(x_plot_array[0], gt_nk[0,:], label='Newton-GMRES non-vectorized', color='tab:orange')
+    plt.plot(x_plot_array[0], u_ss_patch[0], label='Newton-GMRES Vectorized', linestyle='--', color='blue')
     for i in range(1, n_teeth):
-        plt.plot(x_plot_array[i], u_ss_patch[i], color='blue')
-        plt.plot(x_plot_array[i], gt_nk[i,:]+0.0001, color='tab:orange')
+        plt.plot(x_plot_array[i], gt_nk[i,:], color='tab:orange')
+        plt.plot(x_plot_array[i], u_ss_patch[i], linestyle='--', color='blue')
     plt.xlabel(r'$x$')
     plt.legend()
     plt.show()
@@ -346,6 +346,7 @@ def calculateEigenvalues():
     plt.scatter(np.real(1-gt_arnoldi), np.imag(gt_arnoldi) - jitter, alpha=0.6, facecolors='none', edgecolors='tab:orange', label='Non-Vectorized Gap-Tooth')
     plt.xlabel('Real Part')
     plt.ylabel('Imaginary Part')
+    plt.ylim((-0.4, 0.4))
     plt.legend()
     plt.show()
 
