@@ -262,6 +262,69 @@ def calculateSteadyState():
     plt.legend()
     plt.show()
 
+def calculateEigenvalues():
+    RBF.RBFInterpolator.lu_exists = False
+
+    # Domain parameters
+    n_teeth = 21
+    n_gaps = n_teeth - 1
+    gap_over_tooth_size_ratio = 1
+    n_points_per_tooth = 15
+    n_points_per_gap = gap_over_tooth_size_ratio * (n_points_per_tooth - 1) - 1
+    N = n_teeth * n_points_per_tooth + n_gaps * n_points_per_gap
+    dx = 1.0 / (N - 1)
+
+    # Model parameters
+    lam = 1.0
+    params = {'lambda': lam}
+
+    # Load the steady-state
+    x_array = np.linspace(0.0, 1.0, N)
+    x_plot_array = []
+    for i in range(n_teeth):
+        x_plot_array.append(x_array[i * (n_points_per_gap + n_points_per_tooth) : i * (n_points_per_gap + n_points_per_tooth) + n_points_per_tooth])
+    directory = '/Users/hannesvdc/OneDrive - Johns Hopkins/Research_Data/Digital Twins/Bratu/'
+    filename = 'Newton-GMRES_PI_Steady_State_lambda=' + str(lam) + '.npy'
+    u_ss_numpy = np.load(directory + filename)
+
+    # Eigenvalues through arnoldi
+    dt = 1.e-6
+    K = 2
+    Dt = 4.e-6
+    T_patch = 100 * dt
+    T_psi = 1.e-2
+    rdiff = 1.e-8
+    psi_val =  psiPatch(u_ss_numpy, x_plot_array, dx, dt, Dt, K, T_patch, T_psi, params)
+    print('psi_val', lg.norm(psi_val))
+    M = n_teeth * n_points_per_tooth
+    d_psi_mvp = lambda v: (psiPatch(u_ss_numpy + rdiff * v, x_plot_array, dx, dt, Dt, K, T_patch, T_psi, params, verbose=True) - psi_val) / rdiff
+    Dpsi = slg.LinearOperator(shape=(M,M), matvec=d_psi_mvp)
+
+    # Build the full Jacobian matrix
+    Dpsi_matrix = np.zeros((M,M))
+    for i in range(M):
+        Dpsi_matrix[:,i] = Dpsi.matvec(np.eye(M)[:,i])
+    eigvals, eigvecs = lg.eig(Dpsi_matrix)
+
+    # Calculate the eigenvaleus using arnoldi
+    print('Arnoldi Method')
+    eigvals_arnoldi = slg.eigs(Dpsi, k=10, which='SM', return_eigenvectors=False)
+
+    # Load the regular patches eigenvalues for comparison and verification
+    gt_pi_arnoldi = np.load(directory + 'GapToothPIEigenvalues_Arnoldi.npy')
+
+    # Plot the eigenvalues
+    jitter = 0.001
+    plt.scatter(np.real(1-eigvals), np.imag(eigvals), alpha=0.5, label='Vectorized Patches QR Method')
+    plt.scatter(np.real(1-eigvals_arnoldi), np.imag(eigvals_arnoldi) + jitter, alpha=0.5, label='Vectorized Patches Arnoldi Method')
+    plt.scatter(np.real(1-gt_pi_arnoldi), np.imag(gt_pi_arnoldi) - jitter, alpha=0.6, facecolors='none', edgecolors='tab:orange', label='Non-Vectorized Patches')
+    plt.xlabel('Real Part')
+    plt.ylabel('Imaginary Part')
+    plt.title('Jacobian Eigenvalues of Patches (GT + PI)')
+    plt.ylim((-0.4, 0.4))
+    plt.legend()
+    plt.show()
+
 def parseArguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -275,6 +338,6 @@ if __name__ == '__main__':
     elif args.experiment == 'steady-state':
         calculateSteadyState()
     elif args.experiment == 'arnoldi':
-        pass
+        calculateEigenvalues()
     else:
         print('This experiment is not supported.')
