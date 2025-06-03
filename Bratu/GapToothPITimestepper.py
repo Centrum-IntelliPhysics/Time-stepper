@@ -37,7 +37,6 @@ def eulerPatchPITimestepper(u, dx, dt, Dt, K, T_patch, a, b, patch, n_teeth, par
     return u
 
 def patchPIOneTimestep(u0, x_array, n_teeth, dx, dt, Dt, K, T_patch, params, solver='lu_direct', return_neumann=False):
-   
     # Build the interpolating spline based on left- and right endpoints
     x_spline_values = []
     u_spline_values = []
