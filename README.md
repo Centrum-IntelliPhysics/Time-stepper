@@ -10,8 +10,9 @@ We integrate **local Neural Operators (NOs)** with iterative numerical methods i
 We apply the framework to:
 
 * 1D Allen-Cahn equation
-* Liouville-Bratu-Gelfand equation
+* Liouville-Bratu-Gelfand equation (see Folder Parabolic Bratu-Gelfand)
 * FitzHugh-Nagumo system (simulated through a Lattice-Boltzmann method (LBM), thus learning the NO from "mesoscopic" data)
+(see Folder with LBM)
 
 If you use or adapt this code for your research, please cite our paper.
 
