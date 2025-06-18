@@ -11,7 +11,7 @@ We apply the framework to:
 
 * 1D Allen-Cahn equation
 * Liouville-Bratu-Gelfand equation
-* FitzHugh-Nagumo system
+* FitzHugh-Nagumo system (simulated through a Lattice-Boltzmann method (LBM), thus learning the NO from "mesoscopic" data)
 
 If you use or adapt this code for your research, please cite our paper.
 
