@@ -6,7 +6,7 @@ This repository contains code for the paper:
 *G. Fabiani, H. Vandecasteele, S. Goswami, C. Siettos, I.G. Kevrekidis*
 \[[arXiv:2505.02308](https://arxiv.org/abs/2505.02308)]
 
-We integrate **local Neural Operators (NOs)** with iterative numerical methods in the **Krylov subspace** to enable fixed-point computation, stability, and bifurcation analysis in nonlinear PDEs—without requiring closed-form equations.
+We integrate **local Neural Operators (NOs)** with iterative numerical methods in the **Krylov subspace** to enable fixed-point computation, stability, and bifurcation analysis in nonlinear PDEs - without requiring closed-form equations.
 We apply the framework to:
 
 * 1D Allen-Cahn equation
