@@ -119,9 +119,9 @@ We use short-time Neural Operators (NOs) locally in time and space to speed up c
 
 PI alternates between short bursts of fine-scale evolution using a trained NO time-stepper and extrapolation over longer intervals to advance slow dynamics:
 
-$u_{n,j} = \mathcal{S}_{\Delta t} \[ u_{n,j-1} \], \quad j = 1, \dots, k, \quad u_{n,0} = u_n$
+$u\_{n,j} = \mathcal{S}\_{\Delta t} [ u_{n,j-1} ], \quad j = 1, \dots, k, \quad u\_{n,0} = u\_n$
 
-$u_{n+1} = u_{n,k} + \Delta \tau \frac{u_{n,k} - u_{n,k-1}}{\Delta t}, \quad \Delta \tau \gg \Delta t$
+$u\_{n+1} = u\_{n,k} + \Delta \tau \frac{u\_{n,k} - u_{n,k-1}}{\Delta t}, \quad \Delta \tau \gg \Delta t$
 
 This reduces computational cost by exploiting scale separation in time.
 
