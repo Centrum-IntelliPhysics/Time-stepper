@@ -59,22 +59,31 @@ Abstract of the paper
 =====
 Neural Operators (NOs) provide a powerful framework for computations involving physical laws that can be modelled by (integro-) partial differential equations (PDEs), directly learning maps between infinite-dimensional function spaces that bypass both the explicit equation identification and their subsequent numerical solving. Still, NOs have so far primarily been employed to explore the dynamical behavior as surrogates of brute-force temporal simulations/predictions. Their potential for systematic rigorous numerical system-level tasks, such as fixed-point, stability, and bifurcation analysis - crucial for predicting irreversible transitions in real-world phenomena - remains largely unexplored. Toward this aim, inspired by the Equation-Free multiscale framework, we propose and implement a framework that integrates (local) NOs with advanced iterative numerical methods in the Krylov subspace, so as to perform efficient system-level stability and bifurcation analysis of large-scale dynamical systems. Beyond fixed point, stability, and bifurcation analysis enabled by local in time NOs, we also demonstrate the usefulness of local in space as well as in space-time ("patch") NOs in accelerating the computer-aided analysis of spatiotemporal dynamics. We illustrate our framework via three nonlinear PDE benchmarks: the 1D Allen-Cahn equation, which undergoes multiple concatenated pitchfork bifurcations; the Liouville-Bratu-Gelfand PDE, which features a saddle-node tipping point; and the FitzHugh-Nagumo (FHN) model, consisting of two coupled PDEs that exhibit both Hopf and saddle-node bifurcations.
 
-Problem Statement: Learning parametric operators of PDEs with NOs
-======
+# Problem Statement: Learning parametric operators of PDEs with NOs
 
 We aim to learn nonlinear parametric operators  
-$$\mathcal{F}_\lambda: \mathcal{U} \times \mathbb{R}^p \rightarrow \mathcal{V}$$  
+$$
+\mathcal{F}_\lambda: \mathcal{U} \times \mathbb{R}^p \rightarrow \mathcal{V}
+$$  
 where $\mathcal{U}, \mathcal{V} \subseteq C^1(\mathbb{R}^d)$ are function spaces, and $\lambda$ denotes input parameters.  
-The operator maps an input function $u(\bm{x})$ to an output $v(\bm{y}) = \mathcal{F}_\lambda[u](\bm{y})$.
+The operator maps an input function $u(\mathbf{x})$ to an output  
+$$
+v(\mathbf{y}) = \mathcal{F}_\lambda[u](\mathbf{y}).
+$$
 
 Specifically, we learn the **solution operator** (or time-stepper) of a PDE evolution equation:  
-$$\frac{\partial u(\bm{x}, t)}{\partial t} = \mathcal{L}[u; \lambda](\bm{x}, t),$$  
-so that, for a given initial state $u_0(\bm{x})$, the learned NO approximates:  
-$$u(\bm{x}, \Delta t) \approx \mathcal{S}_{\Delta t}[u_0; \lambda](\bm{x}).$$
+$$
+\frac{\partial u(\mathbf{x}, t)}{\partial t} = \mathcal{L}[u; \lambda](\mathbf{x}, t),
+$$  
+so that, for a given initial state $u_0(\mathbf{x})$, the learned NO approximates:  
+$$
+u(\mathbf{x}, \Delta t) \approx \mathcal{S}_{\Delta t}[u_0; \lambda](\mathbf{x}).
+$$
 
 We discretize input and output functions using their values at selected sensor locations.  
 
 The final goal is to enable **accurate and efficient operator learning** that supports system-level tasks such as fixed-point and bifurcation analysis.
+
 
 Equation-Free computations with Neural Operators
 =====
