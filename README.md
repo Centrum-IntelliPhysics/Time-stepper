@@ -22,6 +22,9 @@ We integrate **local Neural Operators (NOs)** with iterative numerical methods i
   <img src="https://raw.githubusercontent.com/Centrum-IntelliPhysics/local-neural-operator-time-stepper-instead-of-just-time-stepper/refs/heads/main/images/Schematic_Overview_4.png" width="600"/>
 </p>
 
+Case Studies
+======
+
 We apply the framework to:
 
 * 1D Allen-Cahn equation
