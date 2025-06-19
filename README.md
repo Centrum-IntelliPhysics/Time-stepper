@@ -95,10 +95,10 @@ $u(\mathbf{x}, T) = \mathcal{S}\_{\Delta t} \circ \mathcal{S}\_{\Delta t} \circ 
 
 To avoid error accumulation from long rollouts, steady states $u^*$ are found as fixed points of the time-stepper:  
 
-$ u^* = \mathcal{S}_T \[ u^*, \lambda \], $  
+$u^* = \mathcal{S}_T[u^*, \lambda]$
 which satisfy  
 
-$\psi(u; \lambda) = u - \mathcal{S}_T \[ u, \lambda \] = 0.$  
+$\psi(u; \lambda) = u - \mathcal{S}_T[ u, \lambda ] = 0.$  
 
 We solve $\psi(u;\lambda)=0$ using Newton iterations:  
 
