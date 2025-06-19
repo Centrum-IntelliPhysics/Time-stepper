@@ -62,27 +62,20 @@ Neural Operators (NOs) provide a powerful framework for computations involving p
 # Problem Statement: Learning parametric operators of PDEs with NOs
 
 We aim to learn nonlinear parametric operators  
-$$
-\mathcal{F}_\lambda: \mathcal{U} \times \mathbb{R}^p \rightarrow \mathcal{V}
-$$  
+$\mathcal{F}_\lambda: \mathcal{U} \times \mathbb{R}^p \rightarrow \mathcal{V}$  
 where $\mathcal{U}, \mathcal{V} \subseteq C^1(\mathbb{R}^d)$ are function spaces, and $\lambda$ denotes input parameters.  
 The operator maps an input function $u(\mathbf{x})$ to an output  
-$$
-v(\mathbf{y}) = \mathcal{F}_\lambda[u](\mathbf{y}).
-$$
+$v(\mathbf{y}) = \mathcal{F}_\lambda[u](\mathbf{y})$.
 
 Specifically, we learn the **solution operator** (or time-stepper) of a PDE evolution equation:  
-$$
-\frac{\partial u(\mathbf{x}, t)}{\partial t} = \mathcal{L}[u; \lambda](\mathbf{x}, t),
-$$  
+$\frac{\partial u(\mathbf{x}, t)}{\partial t} = \mathcal{L}[u; \lambda](\mathbf{x}, t)$,  
 so that, for a given initial state $u_0(\mathbf{x})$, the learned NO approximates:  
-$$
-u(\mathbf{x}, \Delta t) \approx \mathcal{S}_{\Delta t}[u_0; \lambda](\mathbf{x}).
-$$
+$u(\mathbf{x}, \Delta t) \approx \mathcal{S}_{\Delta t}[u_0; \lambda](\mathbf{x})$.
 
 We discretize input and output functions using their values at selected sensor locations.  
 
 The final goal is to enable **accurate and efficient operator learning** that supports system-level tasks such as fixed-point and bifurcation analysis.
+
 
 
 Equation-Free computations with Neural Operators
