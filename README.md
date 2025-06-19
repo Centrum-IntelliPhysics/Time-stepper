@@ -129,7 +129,7 @@ This reduces computational cost by exploiting scale separation in time.
 
 Gap-Tooth exploits spatial smoothness by learning local NOs on small spatial patches (`teeth`) separated by gaps:
 
-$ u\_{t+\Delta t} = \mathcal{S}\_{\Delta t}^{local} [u_t] $
+$u_{t+\Delta t} = \mathcal{S}_{\Delta t}^{\text{local}}[u_t]$
 
 Each patch $ T_i = [ x_i - \frac{\Delta x}{2}, x_i + \frac{\Delta x}{2} ] \) evolves independently with boundary conditions interpolated from neighboring patches. This enables large domain evolution by stitching local solutions.
 
