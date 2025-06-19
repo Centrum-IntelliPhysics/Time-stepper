@@ -69,7 +69,7 @@ $\mathcal{F}_\lambda: \mathcal{U} \times \mathbb{R}^p \rightarrow \mathcal{V}$
 where $\mathcal{U}, \mathcal{V} \subseteq C^1(\mathbb{R}^d)$ are function spaces, and $\lambda$ denotes input parameters.  
 The operator maps an input function $u(\mathbf{x})$ to an output  
 
-$v(\mathbf{y}) = \mathcal{F}_\lambda[u](\mathbf{y}).$
+$v(\mathbf{y}) = \mathcal{F}_{\lambda}[u] (\mathbf{y}).$
 
 Specifically, we learn the **solution operator** (or time-stepper) of a PDE evolution equation:  
 
