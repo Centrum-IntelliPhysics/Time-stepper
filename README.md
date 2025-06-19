@@ -91,7 +91,7 @@ Equation-Free computations with Neural Operators
 We learn the solution operator $\mathcal{S}_{\Delta t}$ over short time intervals $\Delta t$ (local in time) to improve training efficiency and accuracy.  
 The full solution at time $T$ is then obtained by autoregressively applying the short-step operator:  
 
-$ u(\bm{x}, T) = \mathcal{S}_{\Delta t} \circ \mathcal{S}_{\Delta t} $  $\circ \cdots \circ \mathcal{S}_{\Delta t} \[ u_0, \lambda \],$   $T / \Delta t \text{ times}.$
+$ u(\mathbf{x}, T) = \mathcal{S}_{\Delta t} \circ \mathcal{S}_{\Delta t} $  $\circ \cdots \circ \mathcal{S}_{\Delta t} \[ u_0, \lambda \],$   $T / \Delta t \text{ times}.$
 
 To avoid error accumulation from long rollouts, steady states $u^*$ are found as fixed points of the time-stepper:  
 
