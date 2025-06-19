@@ -15,7 +15,7 @@ This software implements data-driven **local Neural Operators (NOs)** trained on
 
 We use state-of-the-art NOs, including **RandONets**, and compare them with **DeepONets**, for efficient operator learning from data.
 
-We integrate **local Neural Operators (NOs)** with iterative numerical methods in the **Krylov subspace** to enable fixed-point computation, stability, and bifurcation analysis in nonlinear PDEs - without requiring closed-form equations. All bypassing derivation of explicit equations and their numerical solution. 🔥
+We integrate **local NOs** with iterative numerical methods in the **Krylov subspace** to enable fixed-point computation, stability, and bifurcation analysis in nonlinear PDEs - without requiring closed-form equations. All bypassing derivation of explicit equations and their numerical solution. 🔥
 
 
 <p align="center">
