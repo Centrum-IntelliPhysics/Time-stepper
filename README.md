@@ -77,7 +77,7 @@ $\frac{\partial u(\mathbf{x}, t)}{\partial t} = \mathcal{L}[u; \lambda](\mathbf{
 
 so that, for a given initial state $u_0(\mathbf{x})$, the learned NO approximates:  
 
-$u(\mathbf{x}, \Delta t) \approx \mathcal{S}_{\Delta t} [u_{0}; \lambda] (\mathbf{x}).$
+$u(\mathbf{x}, \Delta t) \approx \mathcal{S}_{\Delta t}[u_0; \lambda](\mathbf{x})$
 
 We discretize input and output functions using their values at selected sensor locations.  
 
