@@ -90,27 +90,22 @@ Equation-Free computations with Neural Operators
 
 We learn the solution operator $\mathcal{S}_{\Delta t}$ over short time intervals $\Delta t$ (local in time) to improve training efficiency and accuracy.  
 The full solution at time $T$ is then obtained by autoregressively applying the short-step operator:  
-$$
-u(\bm{x}, T) = \underbrace{\mathcal{S}_{\Delta t} \circ \mathcal{S}_{\Delta t} \circ \cdots \circ \mathcal{S}_{\Delta t}}_{T / \Delta t \text{ times}}[u_0, \lambda].
-$$
+
+$u(\bm{x}, T) = \underbrace{\mathcal{S}_{\Delta t} \circ \mathcal{S}_{\Delta t} \circ \cdots \circ \mathcal{S}_{\Delta t}}_{T / \Delta t \text{ times}} \[ u_0, \lambda \].$
 
 To avoid error accumulation from long rollouts, steady states $u^*$ are found as fixed points of the time-stepper:  
-$$
-u^* = \mathcal{S}_T[u^*, \lambda],
-$$  
+
+$ u^* = \mathcal{S}_T \[ u^*, \lambda \],$  
 which satisfy  
-$$
-\psi(u; \lambda) = u - \mathcal{S}_T[u, \lambda] = 0.
-$$  
+
+$\psi(u; \lambda) = u - \mathcal{S}_T \[ u, \lambda \] = 0.$  
 
 We solve $\psi(u;\lambda)=0$ using Newton iterations:  
-$$
-\nabla \psi(u^{(k)}; \lambda) \delta^{(k)} = -\psi(u^{(k)}; \lambda), \quad u^{(k+1)} = u^{(k)} + \delta^{(k)},
-$$  
+
+$\nabla \psi(u^{(k)}; \lambda) \delta^{(k)} = -\psi(u^{(k)}; \lambda), \quad u^{(k+1)} = u^{(k)} + \delta^{(k)},$  
+
 with Jacobian-vector products approximated by finite differences:  
-$$
-\nabla \psi(u; \lambda) r \approx \frac{\psi(u + \epsilon r; \lambda) - \psi(u; \lambda)}{\epsilon}.
-$$
+$\nabla \psi(u; \lambda) r \approx \frac{\psi(u + \epsilon r; \lambda) - \psi(u; \lambda)}{\epsilon}.$
 
 Matrix-free methods like Newton-GMRES solve large systems efficiently.  
 Pseudo-arclength continuation traces bifurcation branches, and Arnoldi iterations assess stability of steady states.
@@ -124,13 +119,9 @@ We use short-time Neural Operators (NOs) locally in time and space to speed up c
 
 PI alternates between short bursts of fine-scale evolution using a trained NO time-stepper and extrapolation over longer intervals to advance slow dynamics:
 
-$$
-u_{n,j} = \mathcal{S}_{\Delta t}[u_{n,j-1}], \quad j = 1, \dots, k, \quad u_{n,0} = u_n
-$$
+$u_{n,j} = \mathcal{S}_{\Delta t} \[ u_{n,j-1} \], \quad j = 1, \dots, k, \quad u_{n,0} = u_n$
 
-$$
-u_{n+1} = u_{n,k} + \Delta \tau \frac{u_{n,k} - u_{n,k-1}}{\Delta t}, \quad \Delta \tau \gg \Delta t
-$$
+$u_{n+1} = u_{n,k} + \Delta \tau \frac{u_{n,k} - u_{n,k-1}}{\Delta t}, \quad \Delta \tau \gg \Delta t$
 
 This reduces computational cost by exploiting scale separation in time.
 
@@ -138,16 +129,13 @@ This reduces computational cost by exploiting scale separation in time.
 
 Gap-Tooth exploits spatial smoothness by learning local NOs on small spatial patches (`teeth`) separated by gaps:
 
-$$
-u_{t+\Delta t} = \mathcal{S}_{\Delta t}^{\text{local}}[u_t]
-$$
+$ u_{t+\Delta t} = \mathcal{S}_{\Delta t}^{\text{local}} \[ u_t \] $
 
-Each patch \( T_i = [x_i - \frac{\Delta x}{2}, x_i + \frac{\Delta x}{2}] \) evolves independently with boundary conditions interpolated from neighboring patches. This enables large domain evolution by stitching local solutions.
+Each patch $ T_i = \[ x_i - \frac{\Delta x}{2}, x_i + \frac{\Delta x}{2} \] \) evolves independently with boundary conditions interpolated from neighboring patches. This enables large domain evolution by stitching local solutions.
 
 ### Patch Dynamics
 
 Combining PI and Gap-Tooth yields patch dynamics: local-in-time and local-in-space NOs that scale efficiently for large space-time domains with multiscale features.
-
 
 
 ---
