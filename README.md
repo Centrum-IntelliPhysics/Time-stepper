@@ -17,6 +17,11 @@ We use state-of-the-art NOs, including **RandONets**, and compare them with **De
 
 We integrate **local Neural Operators (NOs)** with iterative numerical methods in the **Krylov subspace** to enable fixed-point computation, stability, and bifurcation analysis in nonlinear PDEs - without requiring closed-form equations. All bypassing derivation of explicit equations and their numerical solution. 🔥
 
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Centrum-IntelliPhysics/local-neural-operator-time-stepper-instead-of-just-time-stepper/refs/heads/main/images/Schematic_Overview_4.png" width="600"/>
+</p>
+
 We apply the framework to:
 
 * 1D Allen-Cahn equation
